@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-dotenv
+spacy
+scikit-learn
+pdfminer.six
+requests
+sqlalchemy
+a2wsgi
+python-multipart
