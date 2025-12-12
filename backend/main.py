@@ -670,6 +670,12 @@ def ats_check(data: ATSRequest):
     matched.sort(key=len, reverse=True)
     missing.sort(key=len, reverse=True)
 
+    return {
+        "score": final_score,
+        "matched_keywords": matched[:20], # Top 20
+        "missing_keywords": missing[:20]  # Top 20
+    }
+
 # --- SERVE STATIC FRONTEND FILES ---
 
 # CRITICAL: This MUST be the last route in your file.
