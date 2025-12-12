@@ -67,7 +67,6 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
     const handleJobSubmit = async (e) => {
         e.preventDefault();
         try {
-        try {
             await axios.post('/admin/jobs', jobForm);
             setJobForm({ title: '', company: '', location: '', description: '', skills_required: '', contract_type: 'full_time', url: '' });
             fetchData();
