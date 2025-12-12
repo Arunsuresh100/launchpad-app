@@ -128,7 +128,7 @@ function App() {
                     <span className="text-xl">⚡</span> 
                     <span>Made by <span className="font-bold text-white text-lg">Arun Suresh</span> using AI</span>
                  </p>
-                 <p className="text-sm text-slate-500">© 2024 Arun Suresh. All rights reserved.</p>
+                    <p className="text-slate-500 text-sm">© 2025 LaunchPad. All rights reserved.</p>
              </div>
              
              <div className="flex items-center gap-6">

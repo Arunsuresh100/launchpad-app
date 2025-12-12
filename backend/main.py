@@ -766,8 +766,10 @@ def ats_check(data: ATSRequest):
 # It tells FastAPI to try and find a static file (like index.html)
 # in the '../frontend/dist' directory for any path not handled above.
 # The path must be relative to the Root Directory on Render (which is 'backend').
-app.mount(
-    "/",
-    StaticFiles(directory="../frontend/dist", html=True),
-    name="static"
-)
+
+# Serve React Frontend (Production Build) - ONLY IF EXISTS
+frontend_dist = "../frontend/dist"
+if os.path.exists(frontend_dist):
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="static")
+else:
+    print(f"WARNING: Frontend static files not found at {frontend_dist}. API-only mode (OK for local dev).")

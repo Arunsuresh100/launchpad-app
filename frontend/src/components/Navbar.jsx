@@ -114,7 +114,7 @@ const Navbar = ({ setCurrentPage, currentPage, user, setUser }) => {
                             >
                                 <button 
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className="flex items-center gap-2 md:gap-3 focus:outline-none group p-1 rounded-full hover:bg-white/5 transition-colors"
+                                    className="flex items-center gap-2 md:gap-3 focus:outline-none group p-1 pr-3 rounded-full hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-white/5"
                                 >
                                     <div className="text-right hidden md:block">
                                         <p className="text-sm font-bold text-white leading-none group-hover:text-blue-400 transition-colors">{user.full_name}</p>
