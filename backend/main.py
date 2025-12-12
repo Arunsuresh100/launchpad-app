@@ -187,23 +187,24 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 @app.post("/login")
 def login(user: UserLogin, db: Session = Depends(get_db)):
     print(f"Login Attempt: {user.email}")
-    db_user = db.query(User).filter(User.email == user.email).first()
-    
-    if not db_user:
-        print("User not found")
-        raise HTTPException(status_code=401, detail="User not found")
+    try:
+        db_user = db.query(User).filter(User.email == user.email).first()
         
-    print(f"Checking password for {user.email}. Payload pwd len: {len(user.password)}, DB hash len: {len(db_user.hashed_password)}")
-    if not verify_password(user.password, db_user.hashed_password):
-        print("Password mismatch")
-        raise HTTPException(status_code=401, detail="Invalid credentials (Password mismatch)")
-    
-    # ADMIN 2FA CHECK
-    if db_user.role == "admin":
-        print(f"Admin login detected. Secret provided: '{user.secret_key}'")
-        if user.secret_key != "200207":
-            print(f"Secret key mismatch. Expected '200207', got '{user.secret_key}'")
-            raise HTTPException(status_code=403, detail="REQUIRE_SECRET_KEY")
+        if not db_user:
+            print("User not found")
+            raise HTTPException(status_code=401, detail="User not found")
+            
+        print(f"Checking password for {user.email}. Payload pwd len: {len(user.password)}, DB hash len: {len(db_user.hashed_password)}")
+        if not verify_password(user.password, db_user.hashed_password):
+            print("Password mismatch")
+            raise HTTPException(status_code=401, detail="Invalid credentials (Password mismatch)")
+        
+        # ADMIN 2FA CHECK
+        if db_user.role == "admin":
+            print(f"Admin login detected. Secret provided: '{user.secret_key}'")
+            if user.secret_key != "200207":
+                print(f"Secret key mismatch. Expected '200207', got '{user.secret_key}'")
+                raise HTTPException(status_code=403, detail="REQUIRE_SECRET_KEY")
 
         # Update Last Active
         db_user.last_active = datetime.utcnow()
