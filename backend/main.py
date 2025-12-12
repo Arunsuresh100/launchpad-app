@@ -74,6 +74,16 @@ def verify_password(plain_password, hashed_password):
 
 # --- ENDPOINTS ---
 
+@app.get("/system/reset-db-force-safe")
+def reset_database_force():
+    try:
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+        init_db() # Reseed admin/jobs
+        return {"message": "Database completely reset and re-seeded. Schema is now fresh."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/scan-resume")
 async def scan_resume(file: UploadFile = File(...)):
     if not file.filename.endswith(('.pdf', '.docx')):
@@ -191,25 +201,30 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     # ADMIN 2FA CHECK
     if db_user.role == "admin":
         print(f"Admin login detected. Secret provided: '{user.secret_key}'")
-        if user.secret_key != "200207":
             print(f"Secret key mismatch. Expected '200207', got '{user.secret_key}'")
             raise HTTPException(status_code=403, detail="REQUIRE_SECRET_KEY")
 
-    # Update Last Active
-    db_user.last_active = datetime.utcnow()
-    db.commit()
+        # Update Last Active
+        db_user.last_active = datetime.utcnow()
+        db.commit()
 
-    # Log Event
-    log_event(db, "INFO", f"User logged in: {db_user.email} ({db_user.role})")
-    
-    return {
-        "id": db_user.id, 
-        "email": db_user.email, 
-        "full_name": db_user.full_name, 
-        "avatar_id": db_user.avatar_id, 
-        "role": db_user.role,
-        "token": "fake-jwt-token-for-demo"
-    }
+        # Log Event
+        log_event(db, "INFO", f"User logged in: {db_user.email} ({db_user.role})")
+        
+        return {
+            "id": db_user.id, 
+            "email": db_user.email, 
+            "full_name": db_user.full_name, 
+            "avatar_id": db_user.avatar_id, 
+            "role": db_user.role,
+            "token": "fake-jwt-token-for-demo"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Login Failed: {str(e)}")
 
 # --- ADMIN ENDPOINTS ---
 

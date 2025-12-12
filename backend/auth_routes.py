@@ -43,7 +43,7 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
     # Redirect to Frontend with token (Simulated)
     # In real app, we would send a Secure HTTPOnly Cookie or a short-lived token
     return RedirectResponse(
-        url=f"http://localhost:5173?token=mock-oauth-jwt-token&role={user.role}&email={user.email}&id={user.id}&full_name={user.full_name}"
+        url=f"/?token=mock-oauth-jwt-token&role={user.role}&email={user.email}&id={user.id}&full_name={user.full_name}"
     )
 
 @router.get("/auth/github/login")
@@ -71,7 +71,7 @@ async def github_callback(code: str, db: Session = Depends(get_db)):
         db.refresh(user)
         
     return RedirectResponse(
-        url=f"http://localhost:5173?token=mock-oauth-jwt-token&role={user.role}&email={user.email}&id={user.id}&full_name={user.full_name}"
+        url=f"/?token=mock-oauth-jwt-token&role={user.role}&email={user.email}&id={user.id}&full_name={user.full_name}"
     )
 
 # --- FORGOT PASSWORD (MOCK) ---
