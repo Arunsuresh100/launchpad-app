@@ -40,7 +40,7 @@ const Auth = ({ setPage, setUser }) => {
 
     const handleSocialLogin = (provider) => {
         // Redirect to backend OAuth mock endpoints
-        window.location.href = `http://localhost:8000/auth/${provider}/login`;
+        window.location.href = `/auth/${provider}/login`;
     };
 
     const handleSubmit = async (e) => {
@@ -51,7 +51,7 @@ const Auth = ({ setPage, setUser }) => {
 
         try {
             if (view === 'forgot') {
-                const res = await axios.post('http://localhost:8000/auth/forgot-password', { email: formData.email });
+                const res = await axios.post('/auth/forgot-password', { email: formData.email });
                 setSuccessMsg(res.data.message);
                 // Switch to reset view after 2s or immediately
                 setTimeout(() => setView('reset'), 1500);
@@ -64,7 +64,7 @@ const Auth = ({ setPage, setUser }) => {
                     setLoading(false);
                     return;
                 }
-                const res = await axios.post('http://localhost:8000/auth/reset-password', {
+                const res = await axios.post('/auth/reset-password', {
                     email: formData.email,
                     otp: formData.otp,
                     new_password: formData.new_password
@@ -77,7 +77,7 @@ const Auth = ({ setPage, setUser }) => {
                 return;
             }
 
-            const endpoint = view === 'login' ? 'http://localhost:8000/login' : 'http://localhost:8000/register';
+            const endpoint = view === 'login' ? '/login' : '/register';
             const payload = view === 'login' 
                 ? { 
                     email: formData.email, 

@@ -41,11 +41,11 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
     const fetchData = async () => {
         try {
             const [statsRes, usersRes, jobsRes, logsRes, msgsRes] = await Promise.all([
-                axios.get('http://localhost:8000/admin/stats'),
-                axios.get('http://localhost:8000/admin/users'),
-                axios.get('http://localhost:8000/admin/jobs'),
-                axios.get('http://localhost:8000/admin/logs'),
-                axios.get('http://localhost:8000/admin/messages')
+                axios.get('/admin/stats'),
+                axios.get('/admin/users'),
+                axios.get('/admin/jobs'),
+                axios.get('/admin/logs'),
+                axios.get('/admin/messages')
             ]);
             setStats(statsRes.data);
             setUsers(usersRes.data);
@@ -67,7 +67,10 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
     const handleJobSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:8000/admin/jobs', jobForm);
+        try {
+            await axios.post('/admin/jobs', jobForm);
+            setJobForm({ title: '', company: '', location: '', description: '', skills_required: '', contract_type: 'full_time', url: '' });
+            fetchData();
             showNotification(`Job "${jobForm.title}" posted successfully.`);
             setShowJobForm(false);
             setJobForm({title: '', company: '', location: '', description: '', skills_required: '', contract_type: 'full_time', url: ''});
@@ -80,7 +83,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
 
     const handleDeleteJob = async (id, title) => {
         try {
-            await axios.delete(`http://localhost:8000/admin/jobs/${id}`);
+            await axios.delete(`/admin/jobs/${id}`);
             showNotification(`Job "${title}" deleted.`);
             setJobs(jobs.filter(j => j.id !== id));
             fetchData(); // Update logs/list
@@ -100,7 +103,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
     const confirmDelete = async () => {
         if (!deleteModal.id) return;
         try {
-            await axios.delete(`http://localhost:8000/admin/messages/${deleteModal.id}`);
+            await axios.delete(`/admin/messages/${deleteModal.id}`);
             showNotification(`Message deleted.`);
             setMessages(messages.filter(m => m.id !== deleteModal.id));
             setDeleteModal({ open: false, id: null });
@@ -120,7 +123,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
         e.preventDefault();
         setReplyStatus('sending');
         try {
-            const res = await axios.post('http://localhost:8000/admin/reply', {
+            const res = await axios.post('/admin/reply', {
                 user_email: replyModal.userEmail,
                 subject: replyForm.subject,
                 content: replyForm.content,

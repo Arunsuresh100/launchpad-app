@@ -37,7 +37,7 @@ const ResumeUpload = () => {
         formData.append('file', fileToUpload);
 
         try {
-            const response = await axios.post('http://localhost:8000/scan-resume', formData, {
+            const response = await axios.post('/scan-resume', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -56,7 +56,7 @@ const ResumeUpload = () => {
     const fetchJobs = async (skillsToSearch, type = jobType) => {
         setLoadingJobs(true);
         try {
-            const response = await axios.post(`http://localhost:8000/search_jobs?contract_type=${type}`, skillsToSearch);
+            const response = await axios.post(`/search_jobs?contract_type=${type}`, skillsToSearch);
             setJobs(response.data);
         } catch (err) {
             console.error("Job search failed", err);

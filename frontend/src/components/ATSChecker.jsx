@@ -24,7 +24,7 @@ const ATSChecker = () => {
         formData.append('file', file);
         
         try {
-            const response = await axios.post('http://localhost:8000/scan-resume', formData);
+            const response = await axios.post('/scan-resume', formData);
              setResumeText(response.data.text_preview); 
         } catch (err) {
             console.error(err);
@@ -49,7 +49,7 @@ const ATSChecker = () => {
         setError(''); // Clear previous errors
         setLoading(true);
         try {
-            const response = await axios.post('http://localhost:8000/ats_check', {
+            const response = await axios.post('/ats_check', {
                 resume_text: resumeText,
                 job_description: cleanedJD
             });

@@ -36,7 +36,7 @@ const ProfileModal = ({ user, setUser, onClose }) => {
         setMessage({ type: '', text: '' });
         try {
             // Note: avatarId is local for now, not in DB, but we keep it in state
-            const res = await axios.put('http://localhost:8000/update_profile', {
+            const res = await axios.put('/update_profile', {
                 user_id: user.id,
                 full_name: formData.full_name,
                 avatar_id: formData.avatarId
@@ -58,7 +58,7 @@ const ProfileModal = ({ user, setUser, onClose }) => {
         setIsLoading(true);
         setMessage({ type: '', text: '' });
         try {
-            await axios.put('http://localhost:8000/change_password', {
+            await axios.put('/change_password', {
                 user_id: user.id,
                 current_password: passwordData.current_password,
                 new_password: passwordData.new_password

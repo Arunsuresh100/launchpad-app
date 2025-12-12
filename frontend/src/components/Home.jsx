@@ -347,10 +347,10 @@ const ContactSection = ({ user, setPage }) => {
 
         setStatus('sending');
         try {
-            await axios.post('http://localhost:8000/contact', {
-                user_id: user.id,
-                user_name: user.full_name,
-                user_email: user.email,
+            await axios.post('/contact', {
+                user_id: user?.id || 0,
+                user_name: user?.full_name || localName,
+                user_email: user?.email || localEmail,
                 content: message
             });
             setStatus('sent');
