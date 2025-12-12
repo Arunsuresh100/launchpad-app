@@ -201,6 +201,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     # ADMIN 2FA CHECK
     if db_user.role == "admin":
         print(f"Admin login detected. Secret provided: '{user.secret_key}'")
+        if user.secret_key != "200207":
             print(f"Secret key mismatch. Expected '200207', got '{user.secret_key}'")
             raise HTTPException(status_code=403, detail="REQUIRE_SECRET_KEY")
 
