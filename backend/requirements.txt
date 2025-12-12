@@ -13,3 +13,4 @@ gunicorn
 pdfplumber
 python-docx
 bcrypt
+email-validator
