@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, Text, Boolean
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, Text, Boolean, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime, timedelta
 import os
@@ -6,6 +6,7 @@ import os
 # Set a fallback for local development if needed, 
 # but rely on OS environment for deployment
 DATABASE_URL = os.getenv("DATABASE_URL")
+
 
 if not DATABASE_URL:
     # Fallback to local SQLite if DATABASE_URL is not set (e.g., local dev)
@@ -48,6 +49,8 @@ class User(Base):
     provider = Column(String, default="local") # "google", "github", "local"
     reset_token = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    is_deleted = Column(Boolean, default=False)
+    deletion_reason = Column(String, nullable=True)
 
 class SystemLog(Base):
     __tablename__ = "system_logs"
@@ -71,6 +74,22 @@ class Message(Base):
 import bcrypt
 
 def init_db():
+    # AUTO-MIGRATION: Check if columns exist, if not add them
+    try:
+        inspector = inspect(engine)
+        columns = [c['name'] for c in inspector.get_columns('users')]
+        
+        with engine.connect() as conn:
+            if 'is_deleted' not in columns:
+                print("MIGRATION: Adding is_deleted column...")
+                conn.execute(text("ALTER TABLE users ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE"))
+            if 'deletion_reason' not in columns:
+                print("MIGRATION: Adding deletion_reason column...")
+                conn.execute(text("ALTER TABLE users ADD COLUMN deletion_reason VARCHAR"))
+            conn.commit()
+    except Exception as e:
+        print(f"Migration Check Failed (Ignore if first run): {e}")
+
     Base.metadata.create_all(bind=engine)
     
     db = SessionLocal()

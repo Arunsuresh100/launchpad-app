@@ -252,7 +252,9 @@ def get_admin_stats(db: Session = Depends(get_db)):
 
 @app.get("/admin/users")
 def get_all_users(db: Session = Depends(get_db)):
-    users = db.query(User).all()
+    # show active only
+    users = db.query(User).filter(User.is_deleted == False).all()
+    
     # Calculate online status (active < 5m ago)
     now = datetime.utcnow()
     user_list = []
@@ -265,9 +267,63 @@ def get_all_users(db: Session = Depends(get_db)):
             "email": u.email,
             "role": u.role,
             "is_online": bool(is_online),
-            "last_active": u.last_active.isoformat() if u.last_active else None
+            # Ensure "Z" is appended to indicate UTC
+            "last_active": (u.last_active.isoformat() + "Z") if u.last_active else None
         })
+    
+    # SORTING: Online First, Then Last Active Recent First
+    user_list.sort(key=lambda x: (not x['is_online'], x['last_active'] or ""), reverse=False)
+    # Explanation: is_online=True is False in 'not'. True < False? No. False < True.
+    # We want True (Online) first.
+    # Let's use reverse=True logic:
+    # Key: (is_online, last_active). True > False. So Online first. 
+    user_list.sort(key=lambda x: (x['is_online'], x['last_active'] or ""), reverse=True)
+
     return user_list
+
+@app.get("/admin/users/deleted")
+def get_deleted_users(db: Session = Depends(get_db)):
+    users = db.query(User).filter(User.is_deleted == True).all()
+    return [{
+        "id": u.id,
+        "full_name": u.full_name,
+        "email": u.email,
+        "role": u.role,
+        "deletion_reason": u.deletion_reason,
+        "last_active": (u.last_active.isoformat() + "Z") if u.last_active else None
+    } for u in users]
+
+class DeleteUserRequest(BaseModel):
+    reason: str
+
+@app.post("/admin/users/{user_id}/delete")
+def delete_user_soft(user_id: int, req: DeleteUserRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Prevent Admin Self-Delete handled in Frontend likely, but backend check good
+    if user.role == "admin" and user.email == "admin@example.com":
+         raise HTTPException(status_code=400, detail="Cannot delete main admin")
+
+    user.is_deleted = True
+    user.deletion_reason = req.reason
+    db.commit()
+    log_event(db, "WARN", f"User deleted: {user.email}. Reason: {req.reason}")
+    return {"message": "User deleted successfully"}
+
+@app.post("/admin/users/{user_id}/restore")
+def restore_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.is_deleted = False
+    user.deletion_reason = None
+    db.commit()
+    log_event(db, "INFO", f"User restored: {user.email}")
+    return {"message": "User restored successfully"}
+
 
 # --- JOB MANAGEMENT (ADMIN) ---
 
@@ -288,6 +344,14 @@ def get_admin_jobs(db: Session = Depends(get_db)):
 def get_admin_logs(db: Session = Depends(get_db)):
     # Returns last 50 logs
     return db.query(SystemLog).order_by(SystemLog.timestamp.desc()).limit(50).all()
+
+@app.delete("/admin/logs")
+def clear_system_logs(db: Session = Depends(get_db)):
+    db.query(SystemLog).delete()
+    db.commit()
+    # Add one log entry that logs were cleared
+    log_event(db, "SYSTEM", "System logs cleared by Admin")
+    return {"message": "Logs cleared"}
 
 @app.post("/admin/jobs")
 def create_job(job: JobCreate, db: Session = Depends(get_db)):

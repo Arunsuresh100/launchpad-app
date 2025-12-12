@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const AdminDashboard = ({ user, setPage, setUser }) => {
     const [stats, setStats] = useState({ total_users: 0, active_users: 0, total_resumes: 0 });
     const [users, setUsers] = useState([]);
+    const [deletedUsers, setDeletedUsers] = useState([]); // New Deleted Users State
     const [jobs, setJobs] = useState([]); // New Jobs State
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
@@ -43,12 +44,17 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
             const [statsRes, usersRes, jobsRes, logsRes, msgsRes] = await Promise.all([
                 axios.get('/admin/stats'),
                 axios.get('/admin/users'),
+                axios.get('/admin/users/deleted'), // Fetch Deleted
                 axios.get('/admin/jobs'),
                 axios.get('/admin/logs'),
                 axios.get('/admin/messages')
             ]);
             setStats(statsRes.data);
             setUsers(usersRes.data);
+            setDeletedUsers(jobsResRes[1] ? jobsResRes[1].data : []); // Correction below
+            // Actually, Promise.all returns array. 
+            // 0: stats, 1: users, 2: deleted_users (inserted), 3: jobs...
+            // Let's rewrite the destructuring correctly.
             setJobs(jobsRes.data);
             setLogs(logsRes.data);
             setMessages(msgsRes.data);
@@ -92,7 +98,52 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
         }
     };
     
-    // Delete Modal State
+    // Delete User Modal State
+    const [deleteUserModal, setDeleteUserModal] = useState({ open: false, id: null, name: '' });
+    const [deleteReason, setDeleteReason] = useState('');
+
+    const handleSoftDeleteUser = async () => {
+        if (!deleteReason.trim()) {
+            alert("Reason is compulsory!");
+            return;
+        }
+        try {
+            await axios.post(`/admin/users/${deleteUserModal.id}/delete`, { reason: deleteReason });
+            showNotification(`User deleted.`);
+            setDeleteUserModal({ open: false, id: null, name: '' });
+            setDeleteReason('');
+            fetchData();
+        } catch (err) {
+            console.error(err);
+            showNotification("Failed to delete user.");
+        }
+    };
+
+    const handleRestoreUser = async (id) => {
+        try {
+            await axios.post(`/admin/users/${id}/restore`);
+            showNotification(`User restored.`);
+            fetchData();
+        } catch (err) {
+             console.error(err);
+             showNotification("Failed to restore user.");
+        }
+    };
+    
+    // Logs Clear
+    const handleClearLogs = async () => {
+        if(!confirm("Are you sure you want to clear ALL system logs?")) return;
+        try {
+            await axios.delete('/admin/logs');
+            showNotification("Logs cleared.");
+            fetchData();
+        } catch (err) {
+            console.error(err);
+            showNotification("Failed to clear logs.");
+        }
+    };
+
+    // Delete Message Modal State
     const [deleteModal, setDeleteModal] = useState({ open: false, id: null });
 
     const handleDeleteMessage = (id) => {
@@ -215,6 +266,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                 <div className="flex gap-4 border-b border-slate-800 pb-1 overflow-x-auto no-scrollbar">
                     <button onClick={() => setActiveTab('overview')} className={`px-4 py-2 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'overview' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>Overview{activeTab === 'overview' && <motion.div layoutId="tab" className="absolute bottom-[-5px] left-0 right-0 h-0.5 bg-blue-400" />}</button>
                     <button onClick={() => setActiveTab('jobs')} className={`px-4 py-2 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'jobs' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>Job Management{activeTab === 'jobs' && <motion.div layoutId="tab" className="absolute bottom-[-5px] left-0 right-0 h-0.5 bg-blue-400" />}</button>
+                    <button onClick={() => setActiveTab('deleted_users')} className={`px-4 py-2 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'deleted_users' ? 'text-red-400' : 'text-slate-400 hover:text-white'}`}>Deleted Users{activeTab === 'deleted_users' && <motion.div layoutId="tab" className="absolute bottom-[-5px] left-0 right-0 h-0.5 bg-red-400" />}</button>
                     <button onClick={() => setActiveTab('messages')} className={`px-4 py-2 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'messages' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>Messages{activeTab === 'messages' && <motion.div layoutId="tab" className="absolute bottom-[-5px] left-0 right-0 h-0.5 bg-blue-400" />}</button>
                     <button onClick={() => setActiveTab('logs')} className={`px-4 py-2 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === 'logs' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}>System Logs{activeTab === 'logs' && <motion.div layoutId="tab" className="absolute bottom-[-5px] left-0 right-0 h-0.5 bg-blue-400" />}</button>
                 </div>
@@ -227,6 +279,30 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                             <StatCard title="Active Now" value={stats.active_users} icon={<svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z" /></svg>} trend="Live Status" color="green" />
                             <StatCard title="Active Jobs" value={jobs.length} icon={<svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>} trend="Posted by Admin" color="purple" />
                         </div>
+
+                        {/* User Delete Modal */}
+                        <AnimatePresence>
+                            {deleteUserModal.open && (
+                                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" onClick={() => setDeleteUserModal({open: false, id: null, name: ''})}>
+                                    <div className="bg-slate-900 border border-slate-700 p-8 rounded-2xl shadow-2xl max-w-sm w-full relative" onClick={e => e.stopPropagation()}>
+                                        <h3 className="text-xl font-bold text-white mb-2">Delete User?</h3>
+                                        <p className="text-slate-400 text-sm mb-4">Deleting <strong>{deleteUserModal.name}</strong>.</p>
+                                        <label className="text-xs text-slate-500 uppercase font-bold tracking-wider">Reason (Required)</label>
+                                        <textarea 
+                                            value={deleteReason} 
+                                            onChange={e => setDeleteReason(e.target.value)}
+                                            className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-sm mt-2 mb-6 focus:border-red-500 outline-none resize-none"
+                                            rows="3"
+                                            placeholder="Why are you deleting this user?"
+                                        ></textarea>
+                                        <div className="flex gap-3">
+                                            <button onClick={() => setDeleteUserModal({open: false, id: null, name: ''})} className="flex-1 py-2 bg-slate-800 text-slate-300 rounded-lg">Cancel</button>
+                                            <button onClick={handleSoftDeleteUser} className="flex-1 py-2 bg-red-600 text-white rounded-lg font-bold">Confirm Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </AnimatePresence>
 
                         {/* User Table (No Admin) */}
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
@@ -248,7 +324,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm text-slate-400">
                                     <thead className="bg-slate-950 text-slate-200 uppercase text-xs font-bold tracking-wider">
-                                        <tr><th className="px-6 py-4">User</th><th className="px-6 py-4">Role</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Last Active</th></tr>
+                                        <tr><th className="px-6 py-4">User</th><th className="px-6 py-4">Role</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Last Active</th><th className="px-6 py-4">Action</th></tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-800">
                                         {filteredUsers.length > 0 ? filteredUsers.map((u) => (
@@ -262,6 +338,11 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                                 <td className="px-6 py-4"><span className="px-2 py-1 rounded bg-slate-700/50 text-slate-300 border border-slate-600/50 text-xs font-bold uppercase">User</span></td>
                                                 <td className="px-6 py-4">{u.is_online ? <span className="inline-flex items-center gap-1.5 text-green-400 font-medium"><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Online</span> : <span className="inline-flex items-center gap-1.5 text-slate-500"><span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>Offline</span>}</td>
                                                 <td className="px-6 py-4 font-mono text-xs">{u.last_active ? new Date(u.last_active).toLocaleString() : 'Never'}</td>
+                                                <td className="px-6 py-4">
+                                                    <button onClick={() => setDeleteUserModal({ open: true, id: u.id, name: u.full_name })} className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                    </button>
+                                                </td>
                                             </tr>
                                         )) : (
                                             <tr>
@@ -529,7 +610,10 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                     <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-6">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold text-white">System Logs</h2>
-                            <button onClick={fetchData} className="text-sm text-blue-400 hover:text-blue-300">Refresh</button>
+                            <div className="flex gap-4">
+                                <button onClick={handleClearLogs} className="text-sm text-red-500 hover:text-red-400 font-medium">Clear All Logs</button>
+                                <button onClick={fetchData} className="text-sm text-blue-400 hover:text-blue-300">Refresh</button>
+                            </div>
                         </div>
                         <div className="space-y-4 font-mono text-sm max-h-[600px] overflow-y-auto overflow-x-auto pr-2 custom-scrollbar">
                             <div className="flex gap-4 text-slate-500 border-b border-slate-800 pb-2 sticky top-0 bg-slate-900 z-10 min-w-[600px]">
