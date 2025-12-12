@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 import shutil
@@ -71,9 +72,7 @@ def verify_password(plain_password, hashed_password):
 
 # --- ENDPOINTS ---
 
-@app.get("/")
-def read_root():
-    return {"message": "AI Career Launchpad Backend is Running"}
+# --- ENDPOINTS ---
 
 @app.post("/scan-resume")
 async def scan_resume(file: UploadFile = File(...)):
@@ -654,8 +653,14 @@ def ats_check(data: ATSRequest):
     matched.sort(key=len, reverse=True)
     missing.sort(key=len, reverse=True)
 
-    return {
-        "score": final_score,
-        "matched_keywords": matched[:30],
-        "missing_keywords": missing[:30]
-    }
+# --- SERVE STATIC FRONTEND FILES ---
+
+# CRITICAL: This MUST be the last route in your file.
+# It tells FastAPI to try and find a static file (like index.html)
+# in the '../frontend/dist' directory for any path not handled above.
+# The path must be relative to the Root Directory on Render (which is 'backend').
+app.mount(
+    "/",
+    StaticFiles(directory="../frontend/dist", html=True),
+    name="static"
+)
