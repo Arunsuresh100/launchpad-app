@@ -198,6 +198,10 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         if not verify_password(user.password, db_user.hashed_password):
             print("Password mismatch")
             raise HTTPException(status_code=401, detail="Invalid credentials (Password mismatch)")
+            
+        # CHECK IF DELETED
+        if db_user.is_deleted:
+             raise HTTPException(status_code=403, detail="Account disabled/deleted. Contact Admin.")
         
         # ADMIN 2FA CHECK
         if db_user.role == "admin":
@@ -228,6 +232,21 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Login Failed: {str(e)}")
 
+@app.get("/auth/verify/{user_id}")
+def verify_user_status(user_id: int, db: Session = Depends(get_db)):
+    """Check if user user still exists and is active. Used for client-side auto-logout."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.is_deleted:
+        raise HTTPException(status_code=403, detail="Account deleted")
+    
+    # Update last_active on this heartbeat
+    user.last_active = datetime.utcnow()
+    db.commit()
+    return {"status": "active"}
+
+
 # --- ADMIN ENDPOINTS ---
 
 @app.get("/admin/stats")
@@ -255,12 +274,13 @@ def get_all_users(db: Session = Depends(get_db)):
     # show active only
     users = db.query(User).filter(User.is_deleted == False).all()
     
-    # Calculate online status (active < 5m ago)
+    # Calculate online status (active < 30 seconds ago for near real-time)
     now = datetime.utcnow()
     user_list = []
     
     for u in users:
-        is_online = u.last_active and (now - u.last_active < timedelta(minutes=5))
+        # Changed from 5 minutes to 30 seconds as requested
+        is_online = u.last_active and (now - u.last_active < timedelta(seconds=35))
         user_list.append({
             "id": u.id,
             "full_name": u.full_name,
