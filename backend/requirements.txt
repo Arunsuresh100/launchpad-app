@@ -8,3 +8,5 @@ requests
 sqlalchemy
 a2wsgi
 python-multipart
+psycopg2-binary
+gunicorn

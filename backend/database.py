@@ -1,10 +1,22 @@
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, Text, Boolean
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime, timedelta
+import os
 
-DATABASE_URL = "sqlite:///./jobs_admin_v2.db"
+# Set a fallback for local development if needed, 
+# but rely on OS environment for deployment
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+if not DATABASE_URL:
+    # Fallback to local SQLite if DATABASE_URL is not set (e.g., local dev)
+    DATABASE_URL = "sqlite:///./jobs_admin_v2.db" 
+    print("WARNING: Using local SQLite database. Set DATABASE_URL for production.")
+
+# RENDER/HEROKU Postgre URL fix
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
