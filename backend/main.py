@@ -113,17 +113,43 @@ def permanent_delete_user(user_id: int, db: Session = Depends(get_db)):
 @app.get("/admin/users")
 def get_all_users(db: Session = Depends(get_db)):
     users = db.query(User).filter(User.is_deleted == False).order_by(User.last_active.desc()).all()
-    # Order by active desc just in case, but frontend does heavy lifting
-    return [{"id": u.id, "full_name": u.full_name, "email": u.email, "role": u.role, "last_active": u.last_active, "provider": u.provider} for u in users]
+    # Explicitly format as UTC Z-string to fix frontend timezone issues
+    return [{
+        "id": u.id, 
+        "full_name": u.full_name, 
+        "email": u.email, 
+        "role": u.role, 
+        "last_active": (u.last_active.isoformat() + "Z") if u.last_active else None, 
+        "provider": u.provider
+    } for u in users]
 
 @app.get("/admin/users/deleted")
 def get_deleted_users(db: Session = Depends(get_db)):
     users = db.query(User).filter(User.is_deleted == True).order_by(User.last_active.desc()).all()
-    return [{"id": u.id, "full_name": u.full_name, "email": u.email, "deletion_reason": u.deletion_reason, "deleted_at": u.last_active} for u in users]
+    return [{
+        "id": u.id, 
+        "full_name": u.full_name, 
+        "email": u.email, 
+        "deletion_reason": u.deletion_reason, 
+        "deleted_at": (u.last_active.isoformat() + "Z") if u.last_active else None 
+    } for u in users]
 
 @app.get("/admin/jobs")
 def get_all_jobs_admin(db: Session = Depends(get_db)):
-    return db.query(JobPost).order_by(JobPost.date_posted.desc()).all()
+    jobs = db.query(JobPost).order_by(JobPost.date_posted.desc()).all()
+    # Manual serialization for dates
+    return [{
+        "id": j.id,
+        "title": j.title,
+        "company": j.company,
+        "location": j.location,
+        "description": j.description,
+        "skills_required": j.skills_required,
+        "contract_type": j.contract_type,
+        "url": j.url,
+        "source": j.source,
+        "date_posted": (j.date_posted.isoformat() + "Z") if j.date_posted else None
+    } for j in jobs]
 
 class JobCreate(BaseModel):
     title: str

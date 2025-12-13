@@ -71,7 +71,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
             const processUsers = (rawUsers) => {
                 const processed = rawUsers.map(u => ({
                     ...u,
-                    is_online: u.last_active && (new Date() - new Date(u.last_active.endsWith('Z') ? u.last_active : u.last_active + 'Z') < 5 * 60 * 1000)
+                    is_online: u.last_active && (new Date() - new Date(u.last_active.endsWith('Z') ? u.last_active : u.last_active + 'Z') < 2 * 60 * 1000)
                 }));
                 // Sort: Online > Offline, then by Date Descending
                 return processed.sort((a, b) => {
