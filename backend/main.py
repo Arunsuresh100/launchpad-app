@@ -163,6 +163,17 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
+        
+    # Strict Email Validation
+    import re
+    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_regex, user.email) or '..' in user.email or user.email.count('@') > 1:
+         raise HTTPException(status_code=400, detail="Invalid email format")
+         
+    # Basic check for repeated TLDs like .com.com which technically might be valid DNS but usually user error
+    domain_part = user.email.split('@')[-1]
+    if domain_part.endswith('.com.com') or domain_part.endswith('.co.co'):
+         raise HTTPException(status_code=400, detail="Invalid email format (repeated TLD)")
     
     # Create new user
     hashed_pwd = get_password_hash(user.password)

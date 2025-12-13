@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -9,14 +9,18 @@ const Auth = ({ setPage, setUser }) => {
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false); // For Reset Flow
     const [showSecretInput, setShowSecretInput] = useState(false);
     const [secretKey, setSecretKey] = useState('');
     
+    // Feature Notification State
+    const [toast, setToast] = useState(null); // { msg: string, type: 'info' | 'warning' }
+
     // Refs
-    const secretInputRef = React.useRef(null);
+    const secretInputRef = useRef(null);
 
     // Auto-focus Secret Input
-    React.useEffect(() => {
+    useEffect(() => {
         if (showSecretInput && secretInputRef.current) {
             secretInputRef.current.focus();
         }
@@ -32,15 +36,43 @@ const Auth = ({ setPage, setUser }) => {
         confirm_password: ''
     });
 
+    // Clear state on view switch
+    useEffect(() => {
+        setError('');
+        setSuccessMsg('');
+        setFormData({
+            email: '',
+            password: '',
+            full_name: '',
+            otp: '',
+            new_password: '',
+            confirm_password: ''
+        });
+        setToast(null);
+    }, [view]);
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         setError('');
         setSuccessMsg('');
     };
 
+    const showFeatureToast = (msg) => {
+        setToast({ msg, type: 'info' });
+        setTimeout(() => setToast(null), 3000);
+    };
+
     const handleSocialLogin = (provider) => {
-        // Redirect to backend OAuth mock endpoints
-        window.location.href = `/auth/${provider}/login`;
+        // Professional "Coming Soon" Message
+        showFeatureToast(`${provider === 'google' ? 'Google' : 'GitHub'} login will be available in future updates.`);
+    };
+
+    const validateEmail = (email) => {
+        // Strict Regex
+        const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!re.test(email)) return false;
+        if (email.includes('.com.com') || email.includes('.co.co')) return false; // Double TLD check
+        return true;
     };
 
     const handleSubmit = async (e) => {
@@ -50,11 +82,18 @@ const Auth = ({ setPage, setUser }) => {
         setSuccessMsg('');
 
         try {
+            // Validation
+            if ((view === 'login' || view === 'signup' || view === 'forgot') && !validateEmail(formData.email)) {
+                setError("Please enter a valid email address.");
+                setLoading(false);
+                return;
+            }
+
             if (view === 'forgot') {
                 const res = await axios.post('/auth/forgot-password', { email: formData.email });
                 setSuccessMsg(res.data.message);
-                // Switch to reset view after 2s or immediately
-                setTimeout(() => setView('reset'), 1500);
+                // Switch to reset view after 2s
+                setTimeout(() => setView('reset'), 2000);
                 return;
             }
 
@@ -72,7 +111,6 @@ const Auth = ({ setPage, setUser }) => {
                 setSuccessMsg(res.data.message);
                 setTimeout(() => {
                     setView('login');
-                    setFormData({ ...formData, password: '', otp: '', new_password: '' });
                 }, 2000);
                 return;
             }
@@ -116,6 +154,21 @@ const Auth = ({ setPage, setUser }) => {
                 <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] bg-blue-600/20 rounded-full blur-[120px] animate-pulse-slow"></div>
                 <div className="absolute top-[30%] -right-[10%] w-[60%] h-[60%] bg-purple-600/20 rounded-full blur-[120px] animate-pulse-slow delay-1000"></div>
             </div>
+
+            {/* Custom Toast Notification */}
+            <AnimatePresence>
+                {toast && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: -50, x: '-50%' }} 
+                        animate={{ opacity: 1, y: 0, x: '-50%' }} 
+                        exit={{ opacity: 0, y: -50, x: '-50%' }}
+                        className="fixed top-8 left-1/2 z-[100] bg-slate-800/90 border border-blue-500/30 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3"
+                    >
+                         <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                         <span className="text-sm font-medium">{toast.msg}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <div className="w-full max-w-5xl bg-slate-900/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col md:flex-row min-h-[600px]">
                 
@@ -230,7 +283,7 @@ const Auth = ({ setPage, setUser }) => {
                             </>
                         )}
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
                             {/* ADMIN SECRET KEY FLOW */}
                             {showSecretInput ? (
                                 <div className="space-y-4 animate-fade-in-up">
@@ -303,29 +356,55 @@ const Auth = ({ setPage, setUser }) => {
                                                     maxLength={6}
                                                 />
                                             </div>
-                                            <div className="space-y-1">
+                                            <div className="space-y-1 relative">
                                                 <label className="text-sm font-medium text-slate-300 ml-1">New Password</label>
-                                                <input 
-                                                    name="new_password"
-                                                    value={formData.new_password}
-                                                    onChange={handleChange}
-                                                    required 
-                                                    type="password" 
-                                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-600" 
-                                                    placeholder="••••••••" 
-                                                />
+                                                <div className="relative">
+                                                    <input 
+                                                        name="new_password"
+                                                        value={formData.new_password}
+                                                        onChange={handleChange}
+                                                        required 
+                                                        type={showNewPassword ? "text" : "password"} 
+                                                        autoComplete="new-password"
+                                                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-600 pr-10" 
+                                                        placeholder="••••••••" 
+                                                    />
+                                                    <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                                                        {showNewPassword ? (
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                                                        ) : (
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div className="space-y-1">
+                                            <div className="space-y-1 relative">
                                                 <label className="text-sm font-medium text-slate-300 ml-1">Confirm New Password</label>
-                                                <input 
-                                                    name="confirm_password"
-                                                    value={formData.confirm_password}
-                                                    onChange={handleChange}
-                                                    required 
-                                                    type="password" 
-                                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-600" 
-                                                    placeholder="••••••••" 
-                                                />
+                                                <div className="relative">
+                                                     <input 
+                                                        name="confirm_password"
+                                                        value={formData.confirm_password}
+                                                        onChange={handleChange}
+                                                        required 
+                                                        type={showNewPassword ? "text" : "password"} 
+                                                        autoComplete="new-password"
+                                                        className={`w-full bg-slate-900 border rounded-xl px-4 py-3 text-white focus:ring-1 outline-none transition-all placeholder:text-slate-600 pr-10 ${formData.confirm_password && formData.new_password !== formData.confirm_password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-700 focus:border-blue-500 focus:ring-blue-500'}`}
+                                                        placeholder="••••••••" 
+                                                    />
+                                                </div>
+                                                {/* Real-time Match Validation */}
+                                                {formData.confirm_password && formData.new_password !== formData.confirm_password && (
+                                                    <p className="text-red-400 text-xs mt-1 ml-1 flex items-center gap-1">
+                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                        Passwords do not match
+                                                    </p>
+                                                )}
+                                                {formData.confirm_password && formData.new_password === formData.confirm_password && (
+                                                     <p className="text-green-400 text-xs mt-1 ml-1 flex items-center gap-1">
+                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                                                        Passwords match
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -339,6 +418,7 @@ const Auth = ({ setPage, setUser }) => {
                                             onChange={handleChange}
                                             required 
                                             type="email" 
+                                            autoComplete="email"
                                             className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-600" 
                                             placeholder="john@company.com" 
                                         />
@@ -362,6 +442,7 @@ const Auth = ({ setPage, setUser }) => {
                                                     onChange={handleChange}
                                                     required 
                                                     type={showPassword ? "text" : "password"} 
+                                                    autoComplete="current-password"
                                                     className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-600 pr-10" 
                                                     placeholder="••••••••" 
                                                 />
