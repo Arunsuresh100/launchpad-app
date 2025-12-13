@@ -54,11 +54,15 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
             ]);
             
             // HELPER: Format UTC Date to Local string correctly
+            // HELPER: Format UTC Date to India Standard Time (IST)
             const formatDate = (dateStr) => {
                 if (!dateStr) return 'Never';
-                // Backend sends naive UTC (no Z). Append Z to force browser to treat as UTC, then convert to Local.
                 const safeDate = dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`;
-                return new Date(safeDate).toLocaleString();
+                return new Date(safeDate).toLocaleString('en-IN', { 
+                    timeZone: 'Asia/Kolkata',
+                    month: 'short', day: 'numeric', year: 'numeric', 
+                    hour: '2-digit', minute: '2-digit', hour12: true 
+                });
             };
 
 
@@ -98,11 +102,12 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
         }
     };
     
-    // Helper helper
-     const formatDate = (dateStr) => {
+    // Re-define helper for render scope
+    const formatDate = (dateStr) => {
         if (!dateStr) return 'Never';
         const safeDate = dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`;
-        return new Date(safeDate).toLocaleString('en-US', { 
+        return new Date(safeDate).toLocaleString('en-IN', { 
+            timeZone: 'Asia/Kolkata',
             month: 'short', day: 'numeric', year: 'numeric', 
             hour: '2-digit', minute: '2-digit', hour12: true 
         });

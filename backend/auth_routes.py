@@ -136,4 +136,19 @@ async def reset_password(req: ResetRequest, db: Session = Depends(get_db)):
     # Clear OTP
     del otp_store[req.email]
     
-    return {"message": "Password reset successfully. Please login."}
+    return {"message": "Password reset successfully"}
+
+@router.get("/auth/verify/{user_id}")
+async def verify_user_status(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.is_deleted:
+        raise HTTPException(status_code=403, detail="Account deleted")
+        
+    # HEARTBEAT UPDATE
+    user.last_active = datetime.utcnow()
+    db.commit()
+    
+    return {"status": "active", "role": user.role}
