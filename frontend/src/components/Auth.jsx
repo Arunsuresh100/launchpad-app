@@ -168,7 +168,20 @@ const Auth = ({ setPage, setUser }) => {
         <div className="min-h-screen bg-slate-950 flex items-center justify-center p-2 md:p-4 relative overflow-hidden">
              {/* Dynamic Background ... */}
              
-             {/* ... Toast ... */}
+             {/* Feature Toast Notification */}
+             <AnimatePresence>
+                {toast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-slate-800/90 backdrop-blur-md border border-slate-700 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3"
+                    >
+                        <span className="text-xl">⚠️</span>
+                        <p className="text-sm font-medium">{toast.msg}</p>
+                    </motion.div>
+                )}
+             </AnimatePresence>
 
             <div className="w-full max-w-5xl bg-slate-900/40 backdrop-blur-xl border border-slate-700/50 rounded-2xl md:rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col md:flex-row md:min-h-[600px]">
                 

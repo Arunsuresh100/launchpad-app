@@ -779,24 +779,34 @@ const InterviewPrep = () => {
                     Previous
                 </button>
                 
-                {currentQuestion < quizQuestions.length - 1 ? (
-                    <button 
-                        onClick={() => setCurrentQuestion(currentQuestion + 1)}
-                        className={`flex-[2] py-3 rounded-xl font-bold ${nextBtnClass} text-white shadow-lg transition-all text-sm md:text-base active:scale-95`}
-                    >
-                        Next Question
-                    </button>
-                ) : (
+                {/* BUTTON LOGIC: 
+                    If all questions are answered -> Show 'Finish & Submit' 
+                    Else If not last page -> Show 'Next'
+                    Else (Last page but not all answered) -> Show Disabled 'Finish'
+                */}
+                {Object.keys(userAnswers).length === quizQuestions.length ? (
                     <button 
                         onClick={handleFinish}
-                        disabled={Object.keys(userAnswers).length < quizQuestions.length}
-                        className={`flex-[2] py-3 rounded-xl font-bold text-white shadow-lg transition-all text-sm md:text-base active:scale-95
-                            ${Object.keys(userAnswers).length < quizQuestions.length 
-                                ? 'bg-gray-600 cursor-not-allowed opacity-50' 
-                                : 'bg-green-600 hover:bg-green-500 shadow-green-500/20'}`}
+                        className={`flex-[2] py-3 rounded-xl font-bold bg-green-600 hover:bg-green-500 text-white shadow-lg transition-all text-sm md:text-base active:scale-95 shadow-green-500/20`}
                     >
-                        {Object.keys(userAnswers).length < quizQuestions.length ? 'Answer All to Finish' : 'Finish & See Score'}
+                        Finish & Submit Quiz
                     </button>
+                ) : (
+                    currentQuestion < quizQuestions.length - 1 ? (
+                        <button 
+                            onClick={() => setCurrentQuestion(currentQuestion + 1)}
+                            className={`flex-[2] py-3 rounded-xl font-bold ${nextBtnClass} text-white shadow-lg transition-all text-sm md:text-base active:scale-95`}
+                        >
+                            Next Question
+                        </button>
+                    ) : ( 
+                        <button 
+                            disabled
+                            className="flex-[2] py-3 rounded-xl font-bold bg-gray-600 text-gray-400 opacity-50 cursor-not-allowed shadow-none border border-gray-600/50"
+                        >
+                            Answer All to Finish
+                        </button>
+                    )
                 )}
             </div>
         </div>
