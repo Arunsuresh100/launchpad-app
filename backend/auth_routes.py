@@ -37,8 +37,12 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
             last_active=datetime.utcnow()
         )
         db.add(user)
-        db.commit()
-        db.refresh(user)
+    else:
+        # Update last_active for existing user
+        user.last_active = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(user)
     
     # Redirect to Frontend with token (Simulated)
     # In real app, we would send a Secure HTTPOnly Cookie or a short-lived token
@@ -67,8 +71,11 @@ async def github_callback(code: str, db: Session = Depends(get_db)):
             last_active=datetime.utcnow()
         )
         db.add(user)
-        db.commit()
-        db.refresh(user)
+    else:
+        user.last_active = datetime.utcnow()
+
+    db.commit()
+    db.refresh(user)
         
     return RedirectResponse(
         url=f"/?token=mock-oauth-jwt-token&role={user.role}&email={user.email}&id={user.id}&full_name={user.full_name}"
