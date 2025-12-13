@@ -160,32 +160,7 @@ class JobCreate(BaseModel):
     contract_type: str = "full_time"
     url: Optional[str] = None
 
-@app.post("/admin/jobs")
-def create_job(job: JobCreate, db: Session = Depends(get_db)):
-    new_job = JobPost(
-        title=job.title,
-        company=job.company,
-        location=job.location,
-        description=job.description,
-        skills_required=job.skills_required,
-        contract_type=job.contract_type,
-        url=job.url,
-        source="Admin Posted",
-        date_posted=datetime.utcnow()
-    )
-    db.add(new_job)
-    db.commit()
-    db.refresh(new_job)
-    return new_job
 
-@app.delete("/admin/jobs/{job_id}")
-def delete_job(job_id: int, db: Session = Depends(get_db)):
-    job = db.query(JobPost).filter(JobPost.id == job_id).first()
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    db.delete(job)
-    db.commit()
-    return {"message": "Job deleted"}
 
 
 
