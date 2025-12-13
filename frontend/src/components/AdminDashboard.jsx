@@ -61,13 +61,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                 return new Date(safeDate).toLocaleString();
             };
 
-            // Process Users to add 'is_online' flag (Active < 5 mins ago)
-            const processUsers = (rawUsers) => {
-                return rawUsers.map(u => ({
-                    ...u,
-                    is_online: u.last_active && (new Date() - new Date(u.last_active.endsWith('Z') ? u.last_active : u.last_active + 'Z') < 5 * 60 * 1000)
-                }));
-            };
+
 
             // Process Users: Add 'is_online' flag AND Sort (Online first, then Last Active)
             const processUsers = (rawUsers) => {
