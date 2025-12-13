@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Force Frontend Build Update V2 - Professional Modals
+// Force Frontend Build Update V3 - Final UI Polish
 const AdminDashboard = ({ user, setPage, setUser }) => {
     const [stats, setStats] = useState({ total_users: 0, active_users: 0, total_resumes: 0 });
     const [users, setUsers] = useState([]);
@@ -55,10 +55,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
             
             setStats(statsRes.data);
             setUsers(usersRes.data);
-            
-            // Sort Deleted Users: Most recent (Reverse order of API which usually sends oldest first)
             setDeletedUsers([...deletedUsersRes.data].reverse());
-            
             setJobs(jobsRes.data);
             setLogs(logsRes.data);
             setMessages(msgsRes.data);
@@ -217,7 +214,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
          u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    // Split Messages Logic from prev fix
+    // Split Messages Logic
     const pendingMessages = messages.filter(m => !m.is_replied).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
     const repliedMessages = messages.filter(m => m.is_replied).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
 
@@ -249,31 +246,43 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                 )}
             </AnimatePresence>
 
-            {/* Clear Logs Modal */}
+            {/* Clear Logs Modal - Professional */}
              <AnimatePresence>
                 {clearLogsModal && (
-                    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" onClick={() => setClearLogsModal(false)}>
-                        <motion.div initial={{scale:0.95}} animate={{scale:1}} exit={{scale:0.95}} className="bg-slate-900 border border-red-500/30 p-6 rounded-2xl max-w-sm w-full" onClick={e=>e.stopPropagation()}>
-                            <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mb-4 mx-auto">
-                                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                   <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm"
+                        onClick={() => setClearLogsModal(false)}
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="bg-slate-900 border border-slate-700/50 p-6 md:p-8 rounded-2xl max-w-sm w-full shadow-2xl relative"
+                            onClick={e=>e.stopPropagation()}
+                        >
+                            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6 mx-auto ring-1 ring-red-500/20">
+                                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </div>
-                            <h3 className="text-lg font-bold text-white mb-2 text-center">Clear All Logs?</h3>
-                            <p className="text-slate-400 text-sm mb-6 text-center">This will permanently delete all system logs.<br/>This action cannot be undone.</p>
-                            <div className="flex gap-3">
-                                <button onClick={()=>setClearLogsModal(false)} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 text-sm font-medium transition-colors">Cancel</button>
-                                <button onClick={handleClearLogs} className="flex-1 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-red-900/20 transition-colors">Clear All</button>
+                            <h3 className="text-xl font-bold text-white mb-2 text-center">Clear System Logs?</h3>
+                            <p className="text-slate-400 text-sm mb-8 text-center leading-relaxed">This will permanently delete all logs history.<br/>This action cannot be undone.</p>
+                            <div className="flex gap-4">
+                                <button onClick={()=>setClearLogsModal(false)} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 text-sm font-medium transition-colors">Cancel</button>
+                                <button onClick={handleClearLogs} className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-900/20 transition-all">Yes, Clear All</button>
                             </div>
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Top Bar */}
+            {/* Top Bar - Updated Title */}
             <div className="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-40 supports-backdrop-blur:bg-slate-900/80 backdrop-blur-md">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <img src="/admin-logo.png" alt="Logo" className="w-8 h-8 rounded-lg bg-slate-800" />
-                        <h1 className="text-lg font-bold text-white tracking-tight hidden md:block">Admin Console</h1>
+                        <h1 className="text-lg font-bold text-white tracking-tight">Admin <span className="text-blue-500">Panel</span></h1>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2 px-2 py-1 bg-slate-800 rounded-full border border-slate-700">
@@ -537,15 +546,27 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
 
                 {activeTab === 'messages' && (
                     <div className="space-y-8 min-h-[600px] relative">
-                        {/* Modals are shared */}
+                        {/* Modals are shared and professional */}
                          <AnimatePresence>
                             {deleteModal.open && (
-                                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" onClick={() => setDeleteModal({ open: false, id: null })}>
-                                    <motion.div initial={{scale:0.9}} animate={{scale:1}} exit={{scale:0.9}} className="bg-slate-900 border border-red-500/30 p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center" onClick={e => e.stopPropagation()}>
+                                <motion.div 
+                                    initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} 
+                                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm" 
+                                    onClick={() => setDeleteModal({ open: false, id: null })}
+                                >
+                                    <motion.div 
+                                        initial={{scale:0.95, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.95, opacity:0}} 
+                                        className="bg-slate-900 border border-red-500/20 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center relative" 
+                                        onClick={e => e.stopPropagation()}
+                                    >
+                                         <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4 mx-auto ring-1 ring-red-500/20">
+                                            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </div>
                                         <h3 className="text-xl font-bold text-white mb-2">Delete Message?</h3>
-                                        <div className="flex gap-3 mt-4">
-                                            <button onClick={() => setDeleteModal({ open: false, id: null })} className="flex-1 py-2 bg-slate-800 text-slate-300 rounded-lg text-sm">Cancel</button>
-                                            <button onClick={confirmDelete} className="flex-1 py-2 bg-red-600 text-white rounded-lg text-sm font-medium">Delete</button>
+                                        <p className="text-slate-400 text-sm mb-6">This message will be removed permanently.</p>
+                                        <div className="flex gap-4">
+                                            <button onClick={() => setDeleteModal({ open: false, id: null })} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
+                                            <button onClick={confirmDelete} className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-900/20">Delete</button>
                                         </div>
                                     </motion.div>
                                 </motion.div>
@@ -554,13 +575,32 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
 
                         <AnimatePresence>
                              {replyModal.open && (
-                                <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" onClick={() => setReplyModal({...replyModal, open: false})}>
-                                    <motion.div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl shadow-2xl max-w-lg w-full" onClick={e=>e.stopPropagation()}>
-                                         <h3 className="text-lg font-bold text-white mb-4">Reply to {replyModal.userName}</h3>
-                                         <form onSubmit={handleSendReply} className="space-y-4">
-                                             <div><label className="text-slate-400 text-xs font-bold uppercase">Subject</label><input value={replyForm.subject} onChange={e=>setReplyForm({...replyForm, subject: e.target.value})} className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white mt-1"/></div>
-                                             <div><label className="text-slate-400 text-xs font-bold uppercase">Message</label><textarea value={replyForm.content} onChange={e=>setReplyForm({...replyForm, content: e.target.value})} rows="6" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white mt-1"/></div>
-                                             <div className="flex gap-3"><button type="button" onClick={()=>setReplyModal({...replyModal, open:false})} className="flex-1 py-2 bg-slate-800 text-slate-300 rounded-lg">Cancel</button><button type="submit" className="flex-1 py-2 bg-blue-600 text-white rounded-lg">Send Reply</button></div>
+                                <motion.div 
+                                    initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+                                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm" 
+                                    onClick={() => setReplyModal({...replyModal, open: false})}
+                                >
+                                    <motion.div 
+                                        initial={{scale:0.95, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.95, opacity:0}}
+                                        className="bg-slate-900 border border-slate-700/50 p-6 md:p-8 rounded-3xl shadow-2xl max-w-lg w-full relative" 
+                                        onClick={e=>e.stopPropagation()}
+                                    >
+                                         <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                                            <div className="p-2 bg-blue-500/10 rounded-lg"><svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div>
+                                            Reply to {replyModal.userName}
+                                         </h3>
+                                         <form onSubmit={handleSendReply} className="space-y-6">
+                                             <div><label className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2 block">Subject</label><input value={replyForm.subject} onChange={e=>setReplyForm({...replyForm, subject: e.target.value})} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-blue-500 outline-none transition-colors"/></div>
+                                             <div>
+                                                 <label className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2 block">Message</label>
+                                                 <textarea value={replyForm.content} onChange={e=>setReplyForm({...replyForm, content: e.target.value})} rows="6" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none"/>
+                                             </div>
+                                             <div className="flex gap-4">
+                                                 <button type="button" onClick={()=>setReplyModal({...replyModal, open:false})} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-medium transition-colors">Cancel</button>
+                                                 <button type="submit" className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg shadow-blue-900/20 transition-all flex items-center justify-center gap-2">
+                                                     Send Reply <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                                                 </button>
+                                             </div>
                                          </form>
                                     </motion.div>
                                 </motion.div>
@@ -583,8 +623,8 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                                 <span className="text-xs text-slate-600 mt-2 block">{new Date(msg.timestamp).toLocaleString()}</span>
                                             </div>
                                             <div className="flex gap-2 self-end md:self-start">
-                                                <button onClick={()=>handleOpenReply(msg)} className="text-xs md:text-sm bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-lg border border-blue-500/20 hover:bg-blue-600/30 transition-colors">Reply</button>
-                                                <button onClick={()=>handleDeleteMessage(msg.id)} className="text-xs md:text-sm text-red-500 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors">Delete</button>
+                                                <button onClick={()=>handleOpenReply(msg)} className="text-xs md:text-sm bg-blue-600/20 text-blue-400 px-4 py-2 rounded-lg border border-blue-500/20 hover:bg-blue-600/30 transition-colors font-medium">Reply</button>
+                                                <button onClick={()=>handleDeleteMessage(msg.id)} className="text-xs md:text-sm text-red-500 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors font-medium">Delete</button>
                                             </div>
                                         </div>
                                     </div>
@@ -608,8 +648,8 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                                 <span className="text-xs text-slate-600 mt-2 block">{new Date(msg.timestamp).toLocaleString()}</span>
                                             </div>
                                             <div className="flex gap-2 self-end md:self-start">
-                                                <span className="inline-block px-2 py-1 bg-green-500/10 text-green-500 text-xs rounded border border-green-500/20 font-bold uppercase tracking-wider">Replied</span>
-                                                <button onClick={()=>handleDeleteMessage(msg.id)} className="text-xs md:text-sm text-slate-500 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg hover:text-red-400 hover:bg-red-900/10 transition-colors">Delete</button>
+                                                <span className="inline-block px-3 py-1 bg-green-500/10 text-green-500 text-xs rounded-lg border border-green-500/20 font-bold uppercase tracking-wider">Replied</span>
+                                                <button onClick={()=>handleDeleteMessage(msg.id)} className="text-xs md:text-sm text-slate-500 px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg hover:text-red-400 hover:bg-red-900/10 transition-colors">Delete</button>
                                             </div>
                                         </div>
                                     </div>

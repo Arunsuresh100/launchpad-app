@@ -70,29 +70,29 @@ const FeatureCard = ({ title, desc, icon, delay }) => (
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ delay, duration: 0.5 }}
-        className="p-8 rounded-3xl bg-slate-900/50 border border-slate-700/50 backdrop-blur-sm hover:bg-slate-800/50 transition-all hover:border-blue-500/30 group flex flex-col items-center text-center"
+        className="p-6 md:p-8 rounded-3xl bg-slate-900/50 border border-slate-700/50 backdrop-blur-sm hover:bg-slate-800/50 transition-all hover:border-blue-500/30 group flex flex-col items-center text-center shadow-lg"
     >
-        <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform duration-300">
+        <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform duration-300 shadow-inner">
             {icon}
         </div>
-        <h3 className="text-2xl font-bold text-white mb-4">{title}</h3>
-        <p className="text-slate-400 leading-relaxed text-lg">{desc}</p>
+        <h3 className="text-xl md:text-2xl font-bold text-white mb-4">{title}</h3>
+        <p className="text-slate-400 leading-relaxed text-base md:text-lg">{desc}</p>
     </motion.div>
 );
 
 const StepItem = ({ number, title, desc }) => (
-    <div className="flex gap-8 items-start relative pb-16 last:pb-0 group">
+    <div className="flex gap-6 items-start relative pb-12 last:pb-0 group">
         <div className="flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center font-bold text-white z-10 group-hover:bg-blue-600 group-hover:border-blue-500 transition-colors">
+            <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center font-bold text-white z-10 group-hover:bg-blue-600 group-hover:border-blue-500 transition-colors shadow-lg">
                 {number}
             </div>
             {number !== "4" && (
                 <div className="w-0.5 h-full bg-slate-800 absolute top-12 left-6 -translate-x-1/2 group-hover:bg-blue-900/50 transition-colors"></div>
             )}
         </div>
-        <div className="pt-2">
-            <h3 className="text-2xl font-bold text-white mb-2">{title}</h3>
-            <p className="text-slate-400 text-lg leading-relaxed max-w-xl">{desc}</p>
+        <div className="pt-1">
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-2">{title}</h3>
+            <p className="text-slate-400 text-base md:text-lg leading-relaxed max-w-xl">{desc}</p>
         </div>
     </div>
 );
@@ -114,12 +114,12 @@ const HeroSection = ({ setPage }) => {
                 <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 w-full items-center">
                     
                     {/* Left: Content - Simplified */}
-                    <div className="text-left space-y-6 relative z-20">
+                    <div className="text-left space-y-8 relative z-20 pt-20 md:pt-0">
                         <motion.h1 
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.8 }}
-                            className="text-4xl sm:text-5xl md:text-7xl font-bold text-white leading-tight tracking-tight"
+                            className="text-5xl sm:text-6xl md:text-7xl font-bold text-white leading-[1.1] tracking-tight"
                         >
                             Unlock Your <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
@@ -131,7 +131,7 @@ const HeroSection = ({ setPage }) => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2, duration: 0.8 }}
-                            className="text-lg md:text-xl text-slate-400 max-w-lg leading-normal"
+                            className="text-xl text-slate-400 max-w-lg leading-relaxed"
                         >
                             Our AI analyzes your resume and simulates real interviews to help you land your dream job faster.
                         </motion.p>
@@ -140,18 +140,20 @@ const HeroSection = ({ setPage }) => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3, duration: 0.8 }}
-                            className="flex flex-col sm:flex-row gap-4 pt-4"
+                            className="flex flex-col sm:flex-row gap-5 pt-4 w-full sm:w-auto"
                         >
                             <button 
                                 onClick={() => setPage('resume')}
-                                className="flex-1 sm:flex-none px-5 py-3 sm:px-8 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-semibold text-base sm:text-lg transition-all shadow-lg hover:shadow-blue-500/25 whitespace-nowrap"
+                                className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold text-lg transition-all shadow-xl hover:shadow-blue-500/25 active:scale-95 flex items-center justify-center gap-2"
                             >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                 Analyze Resume
                             </button>
                             <button 
                                 onClick={() => setPage('interview')}
-                                className="flex-1 sm:flex-none px-5 py-3 sm:px-8 bg-slate-800/50 hover:bg-slate-800 text-white rounded-full font-semibold text-base sm:text-lg transition-all border border-slate-700 hover:border-slate-600 backdrop-blur-sm whitespace-nowrap"
+                                className="w-full sm:w-auto px-8 py-4 bg-slate-800/80 hover:bg-slate-700 text-white rounded-2xl font-bold text-lg transition-all border border-slate-700 hover:border-slate-600 backdrop-blur-md active:scale-95 flex items-center justify-center gap-2"
                             >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                                 Mock Interview
                             </button>
                         </motion.div>
@@ -230,16 +232,16 @@ const HeroSection = ({ setPage }) => {
 
 const AboutSection = () => {
     return (
-        <div className="py-20 md:py-32 bg-slate-950 relative overflow-hidden">
+        <div className="py-16 md:py-32 bg-slate-950 relative overflow-hidden">
             <div className="container mx-auto px-6 md:px-12 lg:px-24">
-                <div className="mb-20 text-center max-w-3xl mx-auto">
-                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Why traditional prep fails?</h2>
-                    <p className="text-xl text-slate-400">
+                <div className="mb-12 md:mb-20 text-center max-w-3xl mx-auto">
+                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">Why traditional prep fails?</h2>
+                    <p className="text-lg md:text-xl text-slate-400 leading-relaxed">
                         Top companies receive thousands of resumes. 75% are rejected by automated ATS before a human ever sees them. We fix that.
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
                     <FeatureCard 
                         delay={0.2}
                         title="ATS Optimization"
@@ -270,26 +272,26 @@ const HowItWorksSection = () => {
             <div className="container mx-auto px-6 md:px-12 lg:px-24 grid lg:grid-cols-2 gap-20 items-center">
                 
                 {/* Visual Side */}
-                <div className="relative order-2 lg:order-1">
+                <div className="relative order-2 lg:order-1 pt-10 lg:pt-0">
                      <div className="absolute inset-0 bg-blue-500/20 blur-[100px] rounded-full"></div>
-                     <div className="relative bg-slate-950 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+                     <div className="relative bg-slate-950 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl">
                         <div className="space-y-6">
                             {/* Fake Chat UI */}
                             <div className="flex gap-4">
                                 <div className="w-10 h-10 rounded-full bg-blue-600 flex-shrink-0"></div>
-                                <div className="bg-slate-800 p-4 rounded-2xl rounded-tl-none text-slate-300 text-sm">
+                                <div className="bg-slate-800 p-4 rounded-2xl rounded-tl-none text-slate-300 text-sm leading-relaxed">
                                     I found 3 critical issues in your React hooks implementation. Here's how to fix them...
                                 </div>
                             </div>
                              <div className="flex gap-4 flex-row-reverse">
                                 <div className="w-10 h-10 rounded-full bg-purple-500 flex-shrink-0"></div>
-                                <div className="bg-purple-900/20 border border-purple-500/20 p-4 rounded-2xl rounded-tr-none text-white text-sm">
+                                <div className="bg-purple-900/20 border border-purple-500/20 p-4 rounded-2xl rounded-tr-none text-white text-sm leading-relaxed">
                                     Wow, I didn't know that about useEffect! Thanks.
                                 </div>
                             </div>
                             <div className="flex gap-4">
                                 <div className="w-10 h-10 rounded-full bg-blue-600 flex-shrink-0"></div>
-                                <div className="bg-slate-800 p-4 rounded-2xl rounded-tl-none text-slate-300 text-sm">
+                                <div className="bg-slate-800 p-4 rounded-2xl rounded-tl-none text-slate-300 text-sm leading-relaxed">
                                     Now let's try a system design question. How would you design a rate limiter?
                                 </div>
                             </div>
