@@ -358,6 +358,42 @@ const Auth = ({ setPage, setUser }) => {
 
                                     {view === 'reset' && (
                                         <div className="space-y-4 animate-fade-in-up">
+                                            {/* DEMO INBOX UI */}
+                                            {successMsg && successMsg.includes("DEMO MODE") && (
+                                                <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden mb-6">
+                                                    <div className="bg-slate-900 px-4 py-2 border-b border-slate-700 flex justify-between items-center">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                                            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                                            <span className="ml-2 text-xs text-slate-400 font-mono">Mock Email Inbox</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-4">
+                                                        <p className="text-slate-400 text-xs mb-1">From: <span className="text-blue-400">auth@launchpad.com</span></p>
+                                                        <p className="text-slate-400 text-xs mb-3">Subject: Password Reset OTP</p>
+                                                        <div className="flex items-center justify-between p-3 bg-slate-900 rounded-lg border border-slate-700/50">
+                                                            <span className="text-xl font-mono text-white tracking-widest font-bold">
+                                                                {successMsg.match(/(\d{6})/) ? successMsg.match(/(\d{6})/)[0] : '------'}
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const code = successMsg.match(/(\d{6})/) ? successMsg.match(/(\d{6})/)[0] : '';
+                                                                    if(code) {
+                                                                        navigator.clipboard.writeText(code);
+                                                                        showFeatureToast("OTP Copied!");
+                                                                        setFormData({...formData, otp: code}); // Auto-fill
+                                                                    }
+                                                                }}
+                                                                className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg transition-colors font-semibold"
+                                                            >
+                                                                Copy & Fill
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                             <div className="space-y-1">
                                                 <label className="text-sm font-medium text-slate-300 ml-1">OTP Code</label>
                                                 <input 

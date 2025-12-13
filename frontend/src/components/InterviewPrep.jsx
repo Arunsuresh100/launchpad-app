@@ -679,6 +679,10 @@ const InterviewPrep = () => {
     }
 
     // --- RENDER: QUIZ RUNNING ---
+    if (!quizQuestions || quizQuestions.length === 0) {
+        return <div className="min-h-[50vh] flex items-center justify-center text-white">Loading Assessment...</div>;
+    }
+
     return (
         <div className="max-w-3xl mx-auto p-4 md:p-6 animate-fade-in-up">
             <div className="flex justify-between items-center mb-4">
