@@ -73,7 +73,101 @@ const Auth = ({ setPage, setUser }) => {
         setToast(null);
     }, [view]);
 
-    // ... (keep usage of handleChange, etc)
+    const showFeatureToast = (msg) => {
+        setToast({ msg, type: 'info' });
+        setTimeout(() => setToast(null), 3000);
+    };
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setError('');
+    };
+
+    const handleSocialLogin = (provider) => {
+        setLoading(true);
+        // Simulate API call
+        setTimeout(() => {
+            setLoading(false);
+            if (provider === 'google' || provider === 'github') {
+                // For demo, we just simulate a login
+                const mockUser = {
+                    id: 'social-user-123',
+                    full_name: `${provider === 'google' ? 'Google' : 'GitHub'} User`,
+                    email: `user@${provider}.com`,
+                    role: 'user' // Default to user
+                };
+                setUser(mockUser);
+                setPage('home');
+            }
+        }, 1500);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        
+        try {
+            if (view === 'login') {
+                const res = await axios.post('/auth/login', {
+                    email: formData.email,
+                    password: formData.password
+                });
+                setUser(res.data.user);
+                
+                // Admin Direction Check
+                if (res.data.user.role === 'admin') {
+                    setPage('admin'); // Direct to admin if role is present
+                } else {
+                    setPage('home');
+                }
+
+            } else if (view === 'signup') {
+                const res = await axios.post('/auth/register', {
+                    email: formData.email,
+                    password: formData.password,
+                    full_name: formData.full_name
+                });
+                setSuccessMsg('Account created! Please sign in.');
+                setTimeout(() => {
+                    setView('login');
+                    setSuccessMsg(''); // Clear success msg when switching to login
+                }, 2000);
+
+            } else if (view === 'forgot') {
+                const res = await axios.post('/auth/forgot-password', {
+                    email: formData.email
+                });
+                // IMPT: Set message THEN switch view. 
+                // The useEffect logic we added earlier ensures this message PERSISTS when view becomes 'reset'.
+                setSuccessMsg(res.data.message); 
+                setTimeout(() => {
+                    setView('reset');
+                }, 1000);
+
+            } else if (view === 'reset') {
+                 // Verify passwords match first
+                 if (formData.new_password !== formData.confirm_password) {
+                     throw new Error("Passwords do not match");
+                 }
+
+                const res = await axios.post('/auth/reset-password', {
+                    email: formData.email,
+                    otp: formData.otp,
+                    new_password: formData.new_password
+                });
+                setSuccessMsg('Password reset successful! You can now login.');
+                setTimeout(() => {
+                    setView('login');
+                }, 2000);
+            }
+        } catch (err) {
+            console.error("Auth Error:", err);
+            setError(err.response?.data?.detail || err.message || 'An error occurred. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-slate-950 flex items-center justify-center p-2 md:p-4 relative overflow-hidden">
