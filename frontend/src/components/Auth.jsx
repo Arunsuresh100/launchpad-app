@@ -39,192 +39,57 @@ const Auth = ({ setPage, setUser }) => {
     // Clear state on view switch
     useEffect(() => {
         setError('');
-        // setSuccessMsg(''); // Handled manually to allow persistence across views
-        setFormData({
-            email: '',
+        // Fix: Only clear success message if we are NOT in the reset view
+        // This keeps the OTP message visible when transitioning Forgot -> Reset
+        // But clears it when going Reset -> Login or Back to Login
+        if (view !== 'reset') {
+            setSuccessMsg('');
+            setFormData(prev => ({ ...prev, otp: '' })); // optional: clear OTP input too if leaving flow
+        }
+        
+        // Reset other non-persistent form data
+        setFormData(prev => ({
+            ...prev,
+            email: prev.email, // keep email for convenience sometimes, or clear. Let's keep existing logic mostly.
+             // Actually, let's follow standard security: clear all sensitive fields
             password: '',
-            full_name: '',
-            otp: '',
+            // otp: '', // handled above
             new_password: '',
             confirm_password: ''
-        });
+        }));
+        
+        if (view === 'login' || view === 'signup') {
+             // Fully clear logic if returning to main auth
+             setFormData({
+                email: '',
+                password: '',
+                full_name: '',
+                otp: '',
+                new_password: '',
+                confirm_password: ''
+            });
+        }
+
         setToast(null);
     }, [view]);
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-        setError('');
-        setSuccessMsg('');
-    };
-
-    const showFeatureToast = (msg) => {
-        setToast({ msg, type: 'info' });
-        setTimeout(() => setToast(null), 3000);
-    };
-
-    const handleSocialLogin = (provider) => {
-        // Professional "Coming Soon" Message
-        showFeatureToast(`${provider === 'google' ? 'Google' : 'GitHub'} login will be available in future updates.`);
-    };
-
-    const validateEmail = (email) => {
-        // Strict Regex
-        const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (!re.test(email)) return false;
-        if (email.includes('.com.com') || email.includes('.co.co')) return false; // Double TLD check
-        return true;
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-        setSuccessMsg('');
-
-        try {
-            // Validation
-            if ((view === 'login' || view === 'signup' || view === 'forgot') && !validateEmail(formData.email)) {
-                setError("Please enter a valid email address.");
-                setLoading(false);
-                return;
-            }
-
-            if (view === 'forgot') {
-                const res = await axios.post('/auth/forgot-password', { email: formData.email });
-                // Extract OTP message to show in next view
-                // Extract OTP message to show in next view
-                const otpMsg = res.data.message; 
-                // setSuccessMsg(otpMsg); REMOVED to prevent showing in current view
-                
-                // Switch to reset view after 1.5s but PASS the message 
-                setTimeout(() => {
-                    setView('reset');
-                    // CRITICAL: Set success message AGAIN so it persists in the new view
-                    // and doesn't disappear. 
-                    // We also append the note about future updates here or in the UI.
-                    setSuccessMsg(otpMsg); 
-                }, 1500);
-                return;
-            }
-
-            if (view === 'reset') {
-                if (formData.new_password !== formData.confirm_password) {
-                    setError("Passwords do not match!");
-                    setLoading(false);
-                    return;
-                }
-                const res = await axios.post('/auth/reset-password', {
-                    email: formData.email,
-                    otp: formData.otp,
-                    new_password: formData.new_password
-                });
-                setSuccessMsg(res.data.message);
-                setTimeout(() => {
-                    setView('login');
-                }, 2000);
-                return;
-            }
-
-            const endpoint = view === 'login' ? '/login' : '/register';
-            const payload = view === 'login' 
-                ? { 
-                    email: formData.email, 
-                    password: formData.password,
-                    secret_key: showSecretInput ? secretKey : null 
-                  }
-                : formData; 
-
-            const response = await axios.post(endpoint, payload);
-            
-            // Success
-            setUser(response.data); // Save user to global state
-            if (response.data.token) localStorage.setItem('token', response.data.token);
-            setPage(response.data.role === 'admin' ? 'admin' : 'home'); // Redirect based on role
-
-        } catch (err) {
-            console.error("Auth Error:", err);
-            
-            // HANDLE ADMIN 2FA
-            if (err.response?.status === 403 && err.response?.data?.detail === "REQUIRE_SECRET_KEY") {
-                setShowSecretInput(true);
-                setError(''); // clear error to show the input cleanly
-            } else {
-                setError(err.response?.data?.detail || "Authentication failed. Please try again.");
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
+    // ... (keep usage of handleChange, etc)
 
     return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
-             {/* Dynamic Background */}
-             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
-             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-                <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] bg-blue-600/20 rounded-full blur-[120px] animate-pulse-slow"></div>
-                <div className="absolute top-[30%] -right-[10%] w-[60%] h-[60%] bg-purple-600/20 rounded-full blur-[120px] animate-pulse-slow delay-1000"></div>
-            </div>
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-2 md:p-4 relative overflow-hidden">
+             {/* Dynamic Background ... */}
+             
+             {/* ... Toast ... */}
 
-            {/* Custom Toast Notification */}
-            <AnimatePresence>
-                {toast && (
-                    <motion.div 
-                        initial={{ opacity: 0, y: -50, x: '-50%' }} 
-                        animate={{ opacity: 1, y: 0, x: '-50%' }} 
-                        exit={{ opacity: 0, y: -50, x: '-50%' }}
-                        className="fixed top-8 left-1/2 z-[100] bg-slate-800/90 border border-blue-500/30 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3"
-                    >
-                         <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                         <span className="text-sm font-medium">{toast.msg}</span>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <div className="w-full max-w-5xl bg-slate-900/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col md:flex-row min-h-[600px]">
+            <div className="w-full max-w-5xl bg-slate-900/40 backdrop-blur-xl border border-slate-700/50 rounded-2xl md:rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col md:flex-row md:min-h-[600px]">
                 
-                {/* Left Side: Visual/Marketing */}
+                {/* Left Side: Visual/Marketing - Hidden on mobile */}
                 <div className="hidden md:flex w-1/2 relative bg-slate-900/50 flex-col items-center justify-center p-12 text-center overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/30 to-purple-600/30 opacity-50"></div>
-                     {/* 3D-ish graphic element */}
-                    <motion.div 
-                        animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }}
-                        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                        className="relative z-10 w-48 h-48 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-3xl shadow-2xl flex items-center justify-center mb-10 transform perspective-1000 rotate-y-12 rotate-x-12 border border-white/20"
-                    >
-                         <svg className="w-24 h-24 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                         <div className="absolute inset-0 bg-white/10 rounded-3xl backdrop-blur-sm"></div>
-                    </motion.div>
-
-                    <div className="relative z-10 max-w-sm">
-                        <h2 className="text-3xl font-bold text-white mb-4">
-                            {view === 'forgot' ? 'Account Recovery' : (view === 'login' ? 'Welcome Back!' : 'Join the Revolution')}
-                        </h2>
-                        <p className="text-slate-400 text-lg leading-relaxed">
-                            {view === 'forgot' 
-                                ? "Don't worry, it happens to the best of us. We'll help you get back in."
-                                : (view === 'login' 
-                                    ? "Resume optimization, interview sims, and career tracking all in one place."
-                                    : "Start your journey to a better career today. 10,000+ users are already hired."
-                                )
-                            }
-                        </p>
-                    </div>
-
-                    {/* Testimonial Pill */}
-                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-[80%]">
-                        <div className="bg-slate-950/60 backdrop-blur-md border border-slate-700 rounded-full py-2 px-4 flex items-center gap-3">
-                            <div className="flex -space-x-2">
-                                <div className="w-6 h-6 rounded-full bg-blue-500 border border-slate-900"></div>
-                                <div className="w-6 h-6 rounded-full bg-purple-500 border border-slate-900"></div>
-                                <div className="w-6 h-6 rounded-full bg-green-500 border border-slate-900"></div>
-                            </div>
-                            <span className="text-xs text-slate-400">Trusted by top engineers</span>
-                        </div>
-                    </div>
+                   {/* ... keep content ... */}
                 </div>
 
                 {/* Right Side: Form */}
-                <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-slate-950/30">
+                <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col justify-center bg-slate-950/30">
                     <div className="max-w-md mx-auto w-full">
                          {/* Header Mobile */}
                          <div className="md:hidden text-center mb-8">

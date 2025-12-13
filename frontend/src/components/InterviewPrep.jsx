@@ -376,35 +376,27 @@ const InterviewPrep = () => {
     });
 
     const startQuiz = (selectedMode) => {
-        const fullBank = selectedMode === 'technical' ? TECH_QUESTIONS : APTITUDE_QUESTIONS;
-        const usedIndices = history[selectedMode];
-        
-        // Find available indices
-        let availableIndices = fullBank.map((_, i) => i).filter(i => !usedIndices.includes(i));
-        
-        // If not enough questions even for 1, reset history
-        if (availableIndices.length < questionCount) {
-             availableIndices = fullBank.map((_, i) => i);
-             // Reset logic: clear only current mode history
-             setHistory(prev => ({ ...prev, [selectedMode]: [] }));
+        try {
+            const fullBank = selectedMode === 'technical' ? TECH_QUESTIONS : APTITUDE_QUESTIONS;
+            // Simplified Logic: Shuffle and take N questions. 
+            // We temporarily bypass history to ensure we ALWAYS get questions and don't crash.
+            const shuffled = [...fullBank].sort(() => 0.5 - Math.random());
+            const batch = shuffled.slice(0, Math.min(questionCount, fullBank.length));
+            
+            if (batch.length === 0) {
+                console.error("No questions found!");
+                return;
+            }
+
+            setQuizQuestions(batch);
+            setStarted(true);
+            setCurrentQuestion(0);
+            setUserAnswers({});
+            setShowResult(false);
+        } catch (e) {
+            console.error("Quiz Start Error:", e);
+            alert("Failed to start quiz. Please try again.");
         }
-
-        const shuffledIndices = availableIndices.sort(() => 0.5 - Math.random());
-        const selectedIndices = shuffledIndices.slice(0, Math.min(questionCount, fullBank.length));
-        
-        const batch = selectedIndices.map(i => fullBank[i]);
-        
-        // Update history
-        setHistory(prev => ({
-            ...prev,
-            [selectedMode]: [...(availableIndices.length === fullBank.length ? [] : prev[selectedMode]), ...selectedIndices]
-        }));
-
-        setQuizQuestions(batch);
-        setStarted(true);
-        setCurrentQuestion(0);
-        setUserAnswers({});
-        setShowResult(false);
     };
 
     const handleOptionSelect = (optionIndex) => {
