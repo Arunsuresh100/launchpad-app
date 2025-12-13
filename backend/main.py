@@ -95,9 +95,25 @@ def get_admin_stats(db: Session = Depends(get_db)):
         "total_resumes": total_resumes or total_jobs * 3 # Mock fallback if folder empty
     }
 
+@app.delete("/admin/users/{user_id}/permanent")
+def permanent_delete_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if admin
+    if user.role == "admin":
+        raise HTTPException(status_code=400, detail="Cannot delete admin permanently here")
+        
+    db.delete(user)
+    db.commit()
+    log_event(db, "WARN", f"User permanently deleted: {user.email}")
+    return {"message": "User permanently deleted"}
+
 @app.get("/admin/users")
 def get_all_users(db: Session = Depends(get_db)):
-    users = db.query(User).filter(User.is_deleted == False).all()
+    users = db.query(User).filter(User.is_deleted == False).order_by(User.last_active.desc()).all()
+    # Order by active desc just in case, but frontend does heavy lifting
     return [{"id": u.id, "full_name": u.full_name, "email": u.email, "role": u.role, "last_active": u.last_active, "provider": u.provider} for u in users]
 
 @app.get("/admin/users/deleted")

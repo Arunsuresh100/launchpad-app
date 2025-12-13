@@ -69,8 +69,24 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                 }));
             };
 
+            // Process Users: Add 'is_online' flag AND Sort (Online first, then Last Active)
+            const processUsers = (rawUsers) => {
+                const processed = rawUsers.map(u => ({
+                    ...u,
+                    is_online: u.last_active && (new Date() - new Date(u.last_active.endsWith('Z') ? u.last_active : u.last_active + 'Z') < 5 * 60 * 1000)
+                }));
+                // Sort: Online > Offline, then by Date Descending
+                return processed.sort((a, b) => {
+                    if (a.is_online === b.is_online) {
+                        return new Date(b.last_active || 0) - new Date(a.last_active || 0);
+                    }
+                    return a.is_online ? -1 : 1; 
+                });
+            };
+
             setStats(statsRes.data);
             setUsers(processUsers(usersRes.data));
+            
             // Ensure deleted users are sorted DESC by deletion/active date
             const sortedDeleted = [...deletedUsersRes.data].sort((a,b) => new Date(b.deleted_at || 0) - new Date(a.deleted_at || 0));
             setDeletedUsers(sortedDeleted);
@@ -79,10 +95,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
             setLogs(logsRes.data);
             setMessages(msgsRes.data);
             
-            // Helper available to component scope? No, define outside or use inside render.
-            // Actually, let's attach the cleaner date to the object or just use a render helper.
-            // For now, I will use a render helper function inside the component.
-            return { formatDate }; // return to scope if needed, but easier to just define function inside component body or use this transformer.
+            return { formatDate }; 
             
         } catch (err) {
             console.error("Admin Fetch Error", err);
@@ -90,9 +103,9 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
             setLoading(false);
         }
     };
-
-    // Re-define helper for render scope
-    const formatDate = (dateStr) => {
+    
+    // Helper helper
+     const formatDate = (dateStr) => {
         if (!dateStr) return 'Never';
         const safeDate = dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`;
         return new Date(safeDate).toLocaleString('en-US', { 
@@ -105,7 +118,8 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
         setNotification({ msg, type });
         setTimeout(() => setNotification(''), 3000);
     };
-
+    
+    // ... Job handlers ...
     const handleJobSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -136,6 +150,9 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
     const [deleteUserModal, setDeleteUserModal] = useState({ open: false, id: null, name: '' });
     const [deleteReason, setDeleteReason] = useState('');
     const [validationMsg, setValidationMsg] = useState('');
+    
+    // PERMANENT DELETE STATE
+    const [permDeleteModal, setPermDeleteModal] = useState({ open: false, id: null, name: '' });
 
     const handleSoftDeleteUser = async () => {
         if (!deleteReason.trim()) {
@@ -163,6 +180,19 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
         } catch (err) {
              console.error(err);
              showNotification("Failed to restore user.", 'error');
+        }
+    };
+    
+    const handlePermanentDelete = async () => {
+        if (!permDeleteModal.id) return;
+        try {
+             await axios.delete(`/admin/users/${permDeleteModal.id}/permanent`);
+             showNotification(`User PERMANENTLY deleted.`);
+             setPermDeleteModal({ open: false, id: null, name: '' });
+             fetchData();
+        } catch (err) {
+             console.error(err);
+             showNotification("Failed to delete user permanently.", 'error');
         }
     };
     
@@ -276,6 +306,39 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                             {notification.type === 'error' ? '⚠' : notification.type === 'warning' ? '!' : '✓'}
                         </span>
                         <span className="font-medium text-sm md:text-base whitespace-nowrap">{notification.msg || notification}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            
+            {/* PERMANENT DELETE MODAL */}
+            <AnimatePresence>
+                {permDeleteModal.open && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm"
+                        onClick={() => setPermDeleteModal({open: false, id: null, name: ''})}
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="bg-slate-900 border border-red-500/40 p-8 rounded-3xl shadow-2xl max-w-md w-full relative overflow-hidden ring-4 ring-red-500/10"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="w-16 h-16 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-6 ring-1 ring-red-500/40 animate-pulse">
+                                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-2 text-center">Permanently Delete?</h3>
+                            <p className="text-slate-400 text-center mb-6">User <span className="text-red-400 font-bold">{permDeleteModal.name}</span> will be wiped from the database. <br/>This action is <span className="text-red-400 font-bold underline">IRREVERSIBLE</span>.</p>
+                            <div className="flex gap-3">
+                                <button onClick={() => setPermDeleteModal({open: false, id: null, name: ''})} className="flex-1 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
+                                <button onClick={handlePermanentDelete} className="flex-1 py-3.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-900/40 transition-all">
+                                    YES, DELETE FOREVER
+                                </button>
+                            </div>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -547,8 +610,11 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                             <td className="px-6 py-4"><div><p className="font-medium text-slate-300">{u.full_name}</p><p className="text-xs text-slate-600">{u.email}</p></div></td>
                                             <td className="px-6 py-4 flex-1 break-words max-w-xs">{u.deletion_reason || 'No reason'}</td>
                                             <td className="px-6 py-4 font-mono text-xs">{formatDate(u.deleted_at)}</td>
-                                            <td className="px-6 py-4">
-                                                <button onClick={() => handleRestoreUser(u.id)} className="px-3 py-1 bg-green-500/10 text-green-400 rounded border border-green-500/20 text-xs font-bold uppercase">Restore</button>
+                                            <td className="px-6 py-4 flex gap-2">
+                                                <button onClick={() => handleRestoreUser(u.id)} className="px-3 py-1 bg-green-500/10 text-green-400 rounded border border-green-500/20 text-xs font-bold uppercase hover:bg-green-500/20 transition-colors">Restore</button>
+                                                <button onClick={() => setPermDeleteModal({open: true, id: u.id, name: u.full_name})} className="p-1.5 bg-red-500/10 text-red-500 rounded border border-red-500/20 hover:bg-red-500/20 transition-colors" title="Permanently Delete">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
                                             </td>
                                         </tr>
                                     )) : (
@@ -566,7 +632,12 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                                 <p className="font-bold text-slate-300 text-sm">{u.full_name}</p>
                                                 <p className="text-xs text-slate-600">{u.email}</p>
                                              </div>
-                                             <button onClick={() => handleRestoreUser(u.id)} className="px-3 py-1 bg-green-500/10 text-green-400 rounded-lg border border-green-500/20 text-xs font-bold uppercase">Restore</button>
+                                             <div className="flex gap-2">
+                                                <button onClick={() => handleRestoreUser(u.id)} className="px-3 py-1 bg-green-500/10 text-green-400 rounded-lg border border-green-500/20 text-xs font-bold uppercase">Restore</button>
+                                                <button onClick={() => setPermDeleteModal({open: true, id: u.id, name: u.full_name})} className="p-1.5 bg-red-500/10 text-red-500 rounded-lg border border-red-500/20" title="Delete Forever">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                             </div>
                                         </div>
                                         <div className="text-xs text-slate-500 bg-slate-900 p-2 rounded border border-slate-800 mb-2">
                                             <span className="text-slate-400 font-bold">Reason:</span> {u.deletion_reason || 'No reason'}
