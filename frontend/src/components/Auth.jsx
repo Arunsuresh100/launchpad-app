@@ -84,22 +84,7 @@ const Auth = ({ setPage, setUser }) => {
     };
 
     const handleSocialLogin = (provider) => {
-        setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            setLoading(false);
-            if (provider === 'google' || provider === 'github') {
-                // For demo, we just simulate a login
-                const mockUser = {
-                    id: 'social-user-123',
-                    full_name: `${provider === 'google' ? 'Google' : 'GitHub'} User`,
-                    email: `user@${provider}.com`,
-                    role: 'user' // Default to user
-                };
-                setUser(mockUser);
-                setPage('home');
-            }
-        }, 1500);
+        showFeatureToast(`Social login with ${provider === 'google' ? 'Google' : 'GitHub'} is disabled in 'Demo Mode'.`);
     };
 
     const handleSubmit = async (e) => {
