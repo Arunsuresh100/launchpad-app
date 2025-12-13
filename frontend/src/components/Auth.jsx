@@ -91,9 +91,18 @@ const Auth = ({ setPage, setUser }) => {
 
             if (view === 'forgot') {
                 const res = await axios.post('/auth/forgot-password', { email: formData.email });
-                setSuccessMsg(res.data.message);
-                // Switch to reset view after 2s
-                setTimeout(() => setView('reset'), 2000);
+                // Extract OTP message to show in next view
+                const otpMsg = res.data.message; 
+                setSuccessMsg(otpMsg); // Show briefly in current view (optional)
+                
+                // Switch to reset view after 1.5s but PASS the message 
+                setTimeout(() => {
+                    setView('reset');
+                    // CRITICAL: Set success message AGAIN so it persists in the new view
+                    // and doesn't disappear. 
+                    // We also append the note about future updates here or in the UI.
+                    setSuccessMsg(otpMsg); 
+                }, 1500);
                 return;
             }
 
@@ -254,7 +263,12 @@ const Auth = ({ setPage, setUser }) => {
                         )}
                         {successMsg && (
                             <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-200 text-sm text-center">
-                                {successMsg}
+                                <p className="font-bold mb-1">{successMsg}</p>
+                                {view === 'reset' && (
+                                    <p className="text-xs text-green-400/70 mt-1">
+                                        (Note: Real email delivery will be enabled in a future update. Please use the demo code above.)
+                                    </p>
+                                )}
                             </div>
                         )}
 
