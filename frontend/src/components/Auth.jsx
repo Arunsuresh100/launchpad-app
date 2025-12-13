@@ -165,68 +165,97 @@ const Auth = ({ setPage, setUser }) => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-2 md:p-4 relative overflow-hidden">
-             {/* Dynamic Background ... */}
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-0 md:p-4 relative overflow-hidden font-sans">
+             {/* Dynamic Background with slower, smoother animation */}
+             <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-blue-900/20 blur-[120px] animate-blob mix-blend-screen"></div>
+                <div className="absolute top-[20%] -right-[10%] w-[60vw] h-[60vw] rounded-full bg-purple-900/20 blur-[120px] animate-blob animation-delay-2000 mix-blend-screen"></div>
+                <div className="absolute -bottom-[20%] left-[20%] w-[50vw] h-[50vw] rounded-full bg-indigo-900/20 blur-[120px] animate-blob animation-delay-4000 mix-blend-screen"></div>
+             </div>
              
-             {/* Feature Toast Notification */}
+             {/* Enhanced Toast Notification */}
              <AnimatePresence>
                 {toast && (
                     <motion.div
-                        initial={{ opacity: 0, y: -50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-slate-800/90 backdrop-blur-md border border-slate-700 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3"
+                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        className="fixed top-8 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-4 bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 text-white rounded-2xl shadow-2xl shadow-black/50 min-w-[320px]"
                     >
-                        <span className="text-xl">⚠️</span>
-                        <p className="text-sm font-medium">{toast.msg}</p>
+                        <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg transform rotate-3">
+                            <span className="text-xl">🔒</span>
+                        </div>
+                        <div className="flex-1">
+                            <h4 className="text-sm font-bold text-gray-200">Feature Locked</h4>
+                            <p className="text-xs text-gray-400 mt-0.5">{toast.msg}</p>
+                        </div>
+                        <button onClick={() => setToast(null)} className="text-gray-500 hover:text-white transition-colors">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
                     </motion.div>
                 )}
              </AnimatePresence>
 
-            <div className="w-full max-w-5xl bg-slate-900/40 backdrop-blur-xl border border-slate-700/50 rounded-2xl md:rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col md:flex-row md:min-h-[600px]">
+            <div className="w-full h-full md:h-auto md:max-w-5xl bg-slate-900/80 md:bg-slate-900/60 backdrop-blur-2xl border-0 md:border md:border-slate-700/50 md:rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col md:flex-row md:min-h-[650px]">
                 
-                {/* Left Side: Visual/Marketing - Hidden on mobile */}
-                <div className="hidden md:flex w-1/2 relative bg-slate-900/50 flex-col items-center justify-center p-12 text-center overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 blur-[100px]"></div>
+                {/* Left Side: Professional Marketing View */}
+                <div className="hidden md:flex w-[55%] relative flex-col justify-between p-16 overflow-hidden bg-gradient-to-br from-slate-900 to-slate-950 border-r border-slate-800/50">
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
+                    <div className="absolute top-0 right-0 p-12 opacity-50">
+                        <svg className="w-64 h-64 text-slate-800/50" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg>
+                    </div>
+
                     <div className="relative z-10">
-                        <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mx-auto mb-8 shadow-2xl flex items-center justify-center transform rotate-12 hover:rotate-0 transition-all duration-500 group">
-                            <svg className="w-10 h-10 text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                        </div>
-                        <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
-                            Accelerate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Career</span>
+                         <div className="flex items-center gap-3 mb-8">
+                             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                             </div>
+                             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-indigo-200 tracking-tight">LaunchPad AI</span>
+                         </div>
+
+                        <h2 className="text-5xl font-extrabold text-white mb-6 leading-[1.15] tracking-tight">
+                            Master Your <br/>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 animate-gradient-x">Dream Career</span>
                         </h2>
-                        <p className="text-slate-400 text-lg leading-relaxed mb-8">
-                            Join thousands of developers using our AI-powered platform to land their dream jobs.
+                        <p className="text-slate-400 text-lg leading-relaxed mb-10 max-w-sm font-light">
+                            The all-in-one platform for developers to prep, practice, and perform.
                         </p>
                         
-                        <div className="grid grid-cols-2 gap-4 text-left max-w-sm mx-auto">
-                            <div className="flex items-center gap-2 text-slate-300">
-                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                AI Resume Analysis
-                            </div>
-                            <div className="flex items-center gap-2 text-slate-300">
-                                <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                                Smart Job Filling
-                            </div>
-                            <div className="flex items-center gap-2 text-slate-300">
-                                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                                ATS Score Check
-                            </div>
-                            <div className="flex items-center gap-2 text-slate-300">
-                                <span className="w-2 h-2 rounded-full bg-pink-500"></span>
-                                Interview Prep
-                            </div>
+                        <div className="space-y-5">
+                            {[
+                                { title: 'AI Resume Analysis', desc: 'Get instant feedback on your CV' },
+                                { title: 'Technical Mock Quizzes', desc: 'Practice real-world interview/coding questions' },
+                                { title: 'ATS Score Optimization', desc: 'Beat the automated screening bots' }
+                            ].map((item, idx) => (
+                                <div key={idx} className="flex items-start gap-4 group cursor-default">
+                                    <div className="w-8 h-8 rounded-full bg-slate-800/50 border border-slate-700 flex items-center justify-center mt-1 group-hover:border-blue-500/50 group-hover:bg-blue-500/10 transition-colors">
+                                        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-slate-200 font-semibold text-base group-hover:text-blue-200 transition-colors">{item.title}</h3>
+                                        <p className="text-slate-500 text-sm group-hover:text-slate-400 transition-colors">{item.desc}</p>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
+                    </div>
+                    
+                    <div className="relative z-10 mt-12 flex items-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-widest">
+                        <span className="w-8 h-[1px] bg-slate-700"></span>
+                        Trusted by devlopers
                     </div>
                 </div>
 
                 {/* Right Side: Form */}
-                <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col justify-center bg-slate-950/30">
-                    <div className="max-w-md mx-auto w-full">
+                <div className="w-full md:w-[45%] p-8 md:p-12 flex flex-col justify-center bg-transparent md:bg-slate-950/30 relative">
+                    <div className="max-w-sm mx-auto w-full relative z-10">
                          {/* Header Mobile */}
-                         <div className="md:hidden text-center mb-8">
-                            <h2 className="text-3xl font-bold text-white mb-2">LaunchPad.</h2>
-                            <p className="text-slate-400">Your career control center.</p>
+                         <div className="md:hidden text-center mb-10 mt-4">
+                             <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-xl shadow-blue-500/20">
+                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                             </div>
+                            <h2 className="text-3xl font-bold text-white tracking-tight">LaunchPad AI</h2>
+                            <p className="text-slate-400 mt-2 text-sm">Your personal career copilot.</p>
                          </div>
 
                         <div className="text-center mb-8">
