@@ -9,10 +9,14 @@ import Auth from './components/Auth';
 import AdminDashboard from './components/AdminDashboard';
 
 // Custom Toast Component
+// Custom Toast Component
 const Toast = ({ message }) => (
-  <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-slate-800/90 backdrop-blur-md border border-slate-700 text-white px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-3 animate-fade-in-up">
-    <span className="text-yellow-400 text-xl">🔒</span>
-    <span className="font-medium">{message}</span>
+  <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 w-[90%] max-w-sm bg-slate-800/95 backdrop-blur-md border border-slate-600/50 text-white px-6 py-4 rounded-2xl shadow-2xl z-[60] flex items-start gap-4 animate-bounce-in">
+    <span className="text-yellow-400 text-2xl">🔒</span>
+    <div>
+        <p className="font-bold text-sm mb-1">Source Code Private</p>
+        <p className="text-xs text-slate-400 leading-relaxed">{message}</p>
+    </div>
   </div>
 );
 
@@ -67,6 +71,31 @@ function App() {
         setCurrentPage(role === 'admin' ? 'admin' : 'home');
     }
   }, []);
+
+  // Online Heartbeat
+  useEffect(() => {
+      if (!user) return;
+      
+      const verifyOnline = async () => {
+         try {
+             // Basic heartbeat to keep user "Online" in admin panel
+             // We can use the existing verify endpoint
+             const res = await fetch(`/auth/verify/${user.id}`);
+             if (!res.ok && res.status === 403) {
+                 // Account deleted or invalid
+                 localStorage.removeItem('user');
+                 setUser(null);
+                 setCurrentPage('home');
+             }
+         } catch (e) {
+             console.error("Heartbeat failed", e);
+         }
+      };
+
+      verifyOnline(); // Initial check
+      const interval = setInterval(verifyOnline, 30000); // Check every 30s
+      return () => clearInterval(interval);
+  }, [user]);
 
   // Protect Routes & Handle Logout State
   useEffect(() => {

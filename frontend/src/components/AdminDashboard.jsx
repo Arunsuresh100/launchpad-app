@@ -54,18 +54,15 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
             
             setStats(statsRes.data);
             setUsers(usersRes.data);
-            setDeletedUsers(deletedUsersRes.data);
+            
+            // Sort Deleted Users: Most recent (Reverse order of API which usually sends oldest first)
+            // Ideally backend should sort, but we do it here to be safe and fast
+            setDeletedUsers([...deletedUsersRes.data].reverse());
+            
             setJobs(jobsRes.data);
             setLogs(logsRes.data);
+            setMessages(msgsRes.data);
             
-            // Sort Messages: Pending First, Then Newest
-            const sortedMsgs = msgsRes.data.sort((a, b) => {
-                if (a.is_replied === b.is_replied) {
-                    return new Date(b.timestamp) - new Date(a.timestamp);
-                }
-                return a.is_replied ? 1 : -1;
-            });
-            setMessages(sortedMsgs);
         } catch (err) {
             console.error("Admin Fetch Error", err);
         } finally {
@@ -219,6 +216,10 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
         (u.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
          u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()))
     );
+
+    // Split Messages
+    const pendingMessages = messages.filter(m => !m.is_replied).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const repliedMessages = messages.filter(m => m.is_replied).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     if (loading) return (
         <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
@@ -490,7 +491,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                         <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-left text-sm text-slate-400">
                                 <thead className="bg-slate-950 text-slate-200 uppercase text-xs font-bold tracking-wider">
-                                    <tr><th className="px-6 py-4">User</th><th className="px-6 py-4">Reason</th><th className="px-6 py-4">Deletion Date / Active</th><th className="px-6 py-4">Action</th></tr>
+                                    <tr><th className="px-6 py-4">User</th><th className="px-6 py-4">Reason</th><th className="px-6 py-4">Last Active</th><th className="px-6 py-4">Action</th></tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-800">
                                     {deletedUsers.length > 0 ? deletedUsers.map((u) => (
@@ -522,7 +523,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                         <div className="text-xs text-slate-500 bg-slate-900 p-2 rounded border border-slate-800 mb-2">
                                             <span className="text-slate-400 font-bold">Reason:</span> {u.deletion_reason || 'No reason'}
                                         </div>
-                                        <p className="text-[10px] text-slate-600 text-right">Last Active: {u.last_active ? new Date(u.last_active).toLocaleDateString() : 'N/A'}</p>
+                                        <p className="text-[10px] text-slate-600 text-right">Last Active: {u.last_active ? new Date(u.last_active).toLocaleString() : 'N/A'}</p>
                                     </div>
                                 )) : <div className="text-center p-6 text-slate-500">No deleted users.</div>}
                          </div>
@@ -530,9 +531,9 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                 )}
 
                 {activeTab === 'messages' && (
-                    <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-4 md:p-6 min-h-[600px] relative">
-                        {/* Messages Content */}
-                        <AnimatePresence>
+                    <div className="space-y-8 min-h-[600px] relative">
+                        {/* Modals are shared */}
+                         <AnimatePresence>
                             {deleteModal.open && (
                                 <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" onClick={() => setDeleteModal({ open: false, id: null })}>
                                     <motion.div initial={{scale:0.9}} animate={{scale:1}} exit={{scale:0.9}} className="bg-slate-900 border border-red-500/30 p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center" onClick={e => e.stopPropagation()}>
@@ -546,7 +547,6 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                             )}
                         </AnimatePresence>
 
-                        {/* Reply Modal */}
                         <AnimatePresence>
                              {replyModal.open && (
                                 <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" onClick={() => setReplyModal({...replyModal, open: false})}>
@@ -562,27 +562,55 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                              )}
                         </AnimatePresence>
 
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl md:text-2xl font-bold text-white">Inbox</h2>
+                        {/* Pending Messages */}
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-4 md:p-6">
+                            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <span className="bg-blue-500 w-2 h-2 rounded-full animate-pulse"></span>
+                                New / Pending <span className="text-slate-500 text-sm font-normal">({pendingMessages.length})</span>
+                            </h2>
+                            <div className="grid gap-4">
+                                {pendingMessages.length > 0 ? pendingMessages.map(msg => (
+                                    <div key={msg.id} className="bg-slate-950/40 border border-slate-800/50 p-4 md:p-6 rounded-2xl hover:border-blue-500/30 transition-all border-l-4 border-l-blue-500">
+                                        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                                            <div>
+                                                <h4 className="font-bold text-white text-base md:text-lg">{msg.user_name} <span className="text-xs font-normal text-slate-500 block md:inline">({msg.user_email})</span></h4>
+                                                <p className="text-sm text-slate-300 mt-2">{msg.content}</p>
+                                                <span className="text-xs text-slate-600 mt-2 block">{new Date(msg.timestamp).toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex gap-2 self-end md:self-start">
+                                                <button onClick={()=>handleOpenReply(msg)} className="text-xs md:text-sm bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-lg border border-blue-500/20 hover:bg-blue-600/30 transition-colors">Reply</button>
+                                                <button onClick={()=>handleDeleteMessage(msg.id)} className="text-xs md:text-sm text-red-500 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors">Delete</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )) : <div className="text-center py-8 text-slate-500 italic">No pending messages. Good job!</div>}
+                            </div>
                         </div>
-                         <div className="grid gap-4">
-                            {messages.length > 0 ? messages.map(msg => (
-                                 <div key={msg.id} className="bg-slate-950/40 border border-slate-800/50 p-4 md:p-6 rounded-2xl hover:border-blue-500/30 transition-all">
-                                     <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                                         <div>
-                                             <h4 className="font-bold text-white text-base md:text-lg">{msg.user_name} <span className="text-xs font-normal text-slate-500 block md:inline">({msg.user_email})</span></h4>
-                                             <p className="text-sm text-slate-300 mt-2">{msg.content}</p>
-                                             <span className="text-xs text-slate-600 mt-2 block">{new Date(msg.timestamp).toLocaleString()}</span>
-                                         </div>
-                                         <div className="flex gap-2 self-end md:self-start">
-                                             {!msg.is_replied && <button onClick={()=>handleOpenReply(msg)} className="text-xs md:text-sm bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-lg border border-blue-500/20">Reply</button>}
-                                             <button onClick={()=>handleDeleteMessage(msg.id)} className="text-xs md:text-sm text-red-500 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg">Delete</button>
-                                         </div>
-                                     </div>
-                                     {msg.is_replied && <span className="inline-block mt-3 px-2 py-1 bg-green-500/10 text-green-500 text-xs rounded border border-green-500/20 font-bold uppercase tracking-wider">Replied</span>}
-                                 </div>
-                            )) : <div className="text-center py-12 text-slate-500">No messages.</div>}
-                         </div>
+
+                        {/* Replied Messages */}
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-4 md:p-6 opacity-80 hover:opacity-100 transition-opacity">
+                            <h2 className="text-xl font-bold text-slate-300 mb-4 flex items-center gap-2">
+                                <span className="bg-green-500 w-2 h-2 rounded-full"></span>
+                                Replied History <span className="text-slate-500 text-sm font-normal">({repliedMessages.length})</span>
+                            </h2>
+                            <div className="grid gap-4">
+                                {repliedMessages.length > 0 ? repliedMessages.map(msg => (
+                                    <div key={msg.id} className="bg-slate-950/40 border border-slate-800/50 p-4 md:p-6 rounded-2xl hover:border-slate-700 transition-all">
+                                        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                                            <div>
+                                                <h4 className="font-bold text-slate-400 text-base md:text-lg">{msg.user_name} <span className="text-xs font-normal text-slate-500 block md:inline">({msg.user_email})</span></h4>
+                                                <p className="text-sm text-slate-500 mt-2">{msg.content}</p>
+                                                <span className="text-xs text-slate-600 mt-2 block">{new Date(msg.timestamp).toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex gap-2 self-end md:self-start">
+                                                <span className="inline-block px-2 py-1 bg-green-500/10 text-green-500 text-xs rounded border border-green-500/20 font-bold uppercase tracking-wider">Replied</span>
+                                                <button onClick={()=>handleDeleteMessage(msg.id)} className="text-xs md:text-sm text-slate-500 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg hover:text-red-400 hover:bg-red-900/10 transition-colors">Delete</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )) : <div className="text-center py-8 text-slate-500 italic">No replied messages yet.</div>}
+                            </div>
+                        </div>
                     </div>
                 )}
                 
@@ -597,7 +625,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                         <div className="space-y-2 font-mono text-xs md:text-sm max-h-[600px] overflow-y-auto custom-scrollbar">
                              {logs.length > 0 ? logs.map((log) => (
                                 <div key={log.id} className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 text-slate-300 bg-slate-950/50 p-2 rounded border border-slate-800/50">
-                                    <span className="text-slate-500 text-[10px] md:text-xs min-w-[140px]">{new Date(log.timestamp).toLocaleString()}</span>
+                                    <span className="text-slate-500 text-[10px] md:text-xs min-w-[150px]">{new Date(log.timestamp).toLocaleString()}</span>
                                     <span className={`font-bold text-[10px] md:text-xs min-w-[50px] ${
                                         log.level === 'INFO' ? 'text-green-400' :
                                         log.level === 'WARN' ? 'text-yellow-400' :
