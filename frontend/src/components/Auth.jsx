@@ -109,21 +109,22 @@ const Auth = ({ setPage, setUser }) => {
         
         try {
             if (view === 'login') {
-                const res = await axios.post('/auth/login', {
+                const res = await axios.post('/login', { // FIXED: Root endpoint
                     email: formData.email,
-                    password: formData.password
+                    password: formData.password,
+                    secret_key: secretKey || undefined // Pass secret if admin
                 });
-                setUser(res.data.user);
+                setUser(res.data);
                 
                 // Admin Direction Check
-                if (res.data.user.role === 'admin') {
-                    setPage('admin'); // Direct to admin if role is present
+                if (res.data.role === 'admin') {
+                    setPage('admin'); 
                 } else {
                     setPage('home');
                 }
 
             } else if (view === 'signup') {
-                const res = await axios.post('/auth/register', {
+                const res = await axios.post('/register', { // FIXED: Root endpoint
                     email: formData.email,
                     password: formData.password,
                     full_name: formData.full_name
@@ -131,7 +132,7 @@ const Auth = ({ setPage, setUser }) => {
                 setSuccessMsg('Account created! Please sign in.');
                 setTimeout(() => {
                     setView('login');
-                    setSuccessMsg(''); // Clear success msg when switching to login
+                    setSuccessMsg(''); 
                 }, 2000);
 
             } else if (view === 'forgot') {
