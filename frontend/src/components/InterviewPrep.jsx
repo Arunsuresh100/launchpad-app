@@ -729,6 +729,27 @@ const InterviewPrep = () => {
                         </div>
                     ))}
                 </div>
+                <div className="mt-8 flex justify-center items-center gap-2 flex-wrap">
+                    {questions.map((_, idx) => {
+                        const isAnswered = answers[idx] !== undefined;
+                        const isCurrent = currentQuestion === idx;
+                        return (
+                            <button
+                                key={idx}
+                                onClick={() => setCurrentQuestion(idx)}
+                                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all border-2
+                                    ${isCurrent ? 'scale-110 shadow-lg ring-2 ring-blue-500/50' : ''}
+                                    ${isAnswered 
+                                        ? 'bg-green-500 border-green-600 text-white' 
+                                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'
+                                    }
+                                `}
+                            >
+                                {idx + 1}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
             <div className="flex gap-4">
