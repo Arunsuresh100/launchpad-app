@@ -399,49 +399,7 @@ def get_admin_stats(db: Session = Depends(get_db)):
         "total_resumes": total_resumes
     }
 
-@app.get("/admin/users")
-def get_all_users(db: Session = Depends(get_db)):
-    # show active only
-    users = db.query(User).filter(User.is_deleted == False).all()
-    
-    # Calculate online status (active < 30 seconds ago for near real-time)
-    now = datetime.utcnow()
-    user_list = []
-    
-    for u in users:
-        # Changed from 5 minutes to 30 seconds as requested
-        is_online = u.last_active and (now - u.last_active < timedelta(seconds=35))
-        user_list.append({
-            "id": u.id,
-            "full_name": u.full_name,
-            "email": u.email,
-            "role": u.role,
-            "is_online": bool(is_online),
-            # Ensure "Z" is appended to indicate UTC
-            "last_active": (u.last_active.isoformat() + "Z") if u.last_active else None
-        })
-    
-    # SORTING: Online First, Then Last Active Recent First
-    user_list.sort(key=lambda x: (not x['is_online'], x['last_active'] or ""), reverse=False)
-    # Explanation: is_online=True is False in 'not'. True < False? No. False < True.
-    # We want True (Online) first.
-    # Let's use reverse=True logic:
-    # Key: (is_online, last_active). True > False. So Online first. 
-    user_list.sort(key=lambda x: (x['is_online'], x['last_active'] or ""), reverse=True)
 
-    return user_list
-
-@app.get("/admin/users/deleted")
-def get_deleted_users(db: Session = Depends(get_db)):
-    users = db.query(User).filter(User.is_deleted == True).all()
-    return [{
-        "id": u.id,
-        "full_name": u.full_name,
-        "email": u.email,
-        "role": u.role,
-        "deletion_reason": u.deletion_reason,
-        "last_active": (u.last_active.isoformat() + "Z") if u.last_active else None
-    } for u in users]
 
 class DeleteUserRequest(BaseModel):
     reason: str
