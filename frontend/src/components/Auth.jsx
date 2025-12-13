@@ -164,7 +164,16 @@ const Auth = ({ setPage, setUser }) => {
             }
         } catch (err) {
             console.error("Auth Error:", err);
-            setError(err.response?.data?.detail || err.message || 'An error occurred. Please try again.');
+            const errorMsg = err.response?.data?.detail || err.message || 'An error occurred. Please try again.';
+            
+            // Handle Admin Secret Key Requirement
+            if (errorMsg === "REQUIRE_SECRET_KEY") {
+                setShowSecretInput(true);
+                setError(""); // Clear error so user just sees the input appear
+                showFeatureToast("Admin access requires a security key.");
+            } else {
+                setError(errorMsg);
+            }
         } finally {
             setLoading(false);
         }
@@ -180,7 +189,37 @@ const Auth = ({ setPage, setUser }) => {
                 
                 {/* Left Side: Visual/Marketing - Hidden on mobile */}
                 <div className="hidden md:flex w-1/2 relative bg-slate-900/50 flex-col items-center justify-center p-12 text-center overflow-hidden">
-                   {/* ... keep content ... */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 blur-[100px]"></div>
+                    <div className="relative z-10">
+                        <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mx-auto mb-8 shadow-2xl flex items-center justify-center transform rotate-12 hover:rotate-0 transition-all duration-500 group">
+                            <svg className="w-10 h-10 text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        </div>
+                        <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
+                            Accelerate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Career</span>
+                        </h2>
+                        <p className="text-slate-400 text-lg leading-relaxed mb-8">
+                            Join thousands of developers using our AI-powered platform to land their dream jobs.
+                        </p>
+                        
+                        <div className="grid grid-cols-2 gap-4 text-left max-w-sm mx-auto">
+                            <div className="flex items-center gap-2 text-slate-300">
+                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                AI Resume Analysis
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-300">
+                                <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                                Smart Job Filling
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-300">
+                                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                ATS Score Check
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-300">
+                                <span className="w-2 h-2 rounded-full bg-pink-500"></span>
+                                Interview Prep
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Right Side: Form */}
