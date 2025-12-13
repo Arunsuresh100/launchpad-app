@@ -92,8 +92,9 @@ const Auth = ({ setPage, setUser }) => {
             if (view === 'forgot') {
                 const res = await axios.post('/auth/forgot-password', { email: formData.email });
                 // Extract OTP message to show in next view
+                // Extract OTP message to show in next view
                 const otpMsg = res.data.message; 
-                setSuccessMsg(otpMsg); // Show briefly in current view (optional)
+                // setSuccessMsg(otpMsg); REMOVED to prevent showing in current view
                 
                 // Switch to reset view after 1.5s but PASS the message 
                 setTimeout(() => {
