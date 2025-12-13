@@ -187,13 +187,7 @@ def delete_job(job_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Job deleted"}
 
-@app.get("/admin/logs")
-def get_system_logs(db: Session = Depends(get_db)):
-    return db.query(SystemLog).order_by(SystemLog.timestamp.desc()).limit(50).all()
 
-@app.get("/admin/messages")
-def get_admin_messages(db: Session = Depends(get_db)):
-    return db.query(Message).order_by(Message.timestamp.desc()).all()
 
 # --- ENDPOINTS ---
 
@@ -492,9 +486,7 @@ class JobCreate(BaseModel):
     contract_type: str = "full_time"
     url: Optional[str] = None
 
-@app.get("/admin/jobs")
-def get_admin_jobs(db: Session = Depends(get_db)):
-    return db.query(JobPost).order_by(JobPost.date_posted.desc()).all()
+
 
 @app.get("/admin/logs")
 def get_admin_logs(db: Session = Depends(get_db)):
