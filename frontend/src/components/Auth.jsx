@@ -39,7 +39,7 @@ const Auth = ({ setPage, setUser }) => {
     // Clear state on view switch
     useEffect(() => {
         setError('');
-        setSuccessMsg('');
+        // setSuccessMsg(''); // Handled manually to allow persistence across views
         setFormData({
             email: '',
             password: '',
