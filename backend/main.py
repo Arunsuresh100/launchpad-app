@@ -70,6 +70,89 @@ def verify_password(plain_password, hashed_password):
     hashed_password_bytes = hashed_password.encode('utf-8')
     return bcrypt.checkpw(password_byte_enc, hashed_password_bytes)
 
+# --- ADMIN API ENDPOINTS (NEW) ---
+
+@app.get("/admin/stats")
+def get_admin_stats(db: Session = Depends(get_db)):
+    total_users = db.query(User).filter(User.is_deleted == False).count()
+    
+    # Active in last 24 hours
+    one_day_ago = datetime.utcnow() - timedelta(hours=24)
+    active_users = db.query(User).filter(User.last_active >= one_day_ago).count()
+    
+    total_jobs = db.query(JobPost).count()
+    
+    # Placeholder for resumes (if we tracked them in DB)
+    # For now, just return a static number or count of jobs * 5 (mock)
+    # Or count files in uploads directory if it exists
+    total_resumes = 0
+    if os.path.exists("./uploads"):
+        total_resumes = len(os.listdir("./uploads"))
+
+    return {
+        "total_users": total_users,
+        "active_users": active_users,
+        "total_resumes": total_resumes or total_jobs * 3 # Mock fallback if folder empty
+    }
+
+@app.get("/admin/users")
+def get_all_users(db: Session = Depends(get_db)):
+    users = db.query(User).filter(User.is_deleted == False).all()
+    return [{"id": u.id, "full_name": u.full_name, "email": u.email, "role": u.role, "last_active": u.last_active, "provider": u.provider} for u in users]
+
+@app.get("/admin/users/deleted")
+def get_deleted_users(db: Session = Depends(get_db)):
+    users = db.query(User).filter(User.is_deleted == True).all()
+    return [{"id": u.id, "full_name": u.full_name, "email": u.email, "deletion_reason": u.deletion_reason, "deleted_at": u.last_active} for u in users]
+
+@app.get("/admin/jobs")
+def get_all_jobs_admin(db: Session = Depends(get_db)):
+    return db.query(JobPost).order_by(JobPost.date_posted.desc()).all()
+
+class JobCreate(BaseModel):
+    title: str
+    company: str
+    location: str
+    description: str
+    skills_required: str
+    contract_type: str = "full_time"
+    url: Optional[str] = None
+
+@app.post("/admin/jobs")
+def create_job(job: JobCreate, db: Session = Depends(get_db)):
+    new_job = JobPost(
+        title=job.title,
+        company=job.company,
+        location=job.location,
+        description=job.description,
+        skills_required=job.skills_required,
+        contract_type=job.contract_type,
+        url=job.url,
+        source="Admin Posted",
+        date_posted=datetime.utcnow()
+    )
+    db.add(new_job)
+    db.commit()
+    db.refresh(new_job)
+    return new_job
+
+@app.delete("/admin/jobs/{job_id}")
+def delete_job(job_id: int, db: Session = Depends(get_db)):
+    job = db.query(JobPost).filter(JobPost.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    db.delete(job)
+    db.commit()
+    return {"message": "Job deleted"}
+
+@app.get("/admin/logs")
+def get_system_logs(db: Session = Depends(get_db)):
+    return db.query(SystemLog).order_by(SystemLog.timestamp.desc()).limit(50).all()
+
+@app.get("/admin/messages")
+def get_admin_messages(db: Session = Depends(get_db)):
+    return db.query(Message).order_by(Message.timestamp.desc()).all()
+
 # --- ENDPOINTS ---
 
 # --- ENDPOINTS ---
