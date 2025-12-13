@@ -726,7 +726,7 @@ const InterviewPrep = () => {
                     ))}
                 </div>
                 <div className="mt-8 flex justify-center items-center gap-2 flex-wrap">
-                    {quizQuestions.map((_, idx) => {
+                    {quizQuestions?.map((_, idx) => {
                         const isAnswered = answers[idx] !== undefined;
                         const isCurrent = currentQuestion === idx;
                         return (

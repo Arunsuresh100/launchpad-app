@@ -144,7 +144,7 @@ function App() {
         {currentPage === 'home' && <Home setPage={setCurrentPage} user={user} />}
         {currentPage === 'resume' && <ResumeUpload />}
         {currentPage === 'ats' && <ATSChecker />}
-        {currentPage === 'interview' && <InterviewPrep />}
+        {currentPage === 'interview' && <InterviewPrep setPage={setCurrentPage} />}
         {currentPage === 'auth' && <Auth setPage={setCurrentPage} setUser={setUser} />}
         {currentPage === 'admin' && <AdminDashboard user={user} setUser={setUser} setPage={setCurrentPage} />}
       </div>
