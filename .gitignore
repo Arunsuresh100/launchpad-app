@@ -30,7 +30,7 @@ env/
 node_modules/
 npm-debug.log
 yarn-error.log
-frontend/dist/
+# frontend/dist/ removed to allow deployment
 .env
 
 # Database

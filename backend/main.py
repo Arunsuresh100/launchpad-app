@@ -795,7 +795,15 @@ def ats_check(data: ATSRequest):
 
 # Serve React Frontend (Production Build) - ONLY IF EXISTS
 frontend_dist = "../frontend/dist"
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "timestamp": datetime.utcnow()}
+
 if os.path.exists(frontend_dist):
     app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="static")
 else:
+    @app.get("/")
+    def read_root():
+        return {"message": "Backend API is Online. Frontend static files not found (looking in ../frontend/dist)."}
     print(f"WARNING: Frontend static files not found at {frontend_dist}. API-only mode (OK for local dev).")
