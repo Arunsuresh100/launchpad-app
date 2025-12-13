@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-// Force Frontend Build Update
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Force Frontend Build Update V2 - Professional Modals
 const AdminDashboard = ({ user, setPage, setUser }) => {
     const [stats, setStats] = useState({ total_users: 0, active_users: 0, total_resumes: 0 });
     const [users, setUsers] = useState([]);
@@ -57,7 +57,6 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
             setUsers(usersRes.data);
             
             // Sort Deleted Users: Most recent (Reverse order of API which usually sends oldest first)
-            // Ideally backend should sort, but we do it here to be safe and fast
             setDeletedUsers([...deletedUsersRes.data].reverse());
             
             setJobs(jobsRes.data);
@@ -218,7 +217,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
          u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    // Split Messages
+    // Split Messages Logic from prev fix
     const pendingMessages = messages.filter(m => !m.is_replied).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
     const repliedMessages = messages.filter(m => m.is_replied).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
 
@@ -253,13 +252,16 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
             {/* Clear Logs Modal */}
              <AnimatePresence>
                 {clearLogsModal && (
-                    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setClearLogsModal(false)}>
+                    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" onClick={() => setClearLogsModal(false)}>
                         <motion.div initial={{scale:0.95}} animate={{scale:1}} exit={{scale:0.95}} className="bg-slate-900 border border-red-500/30 p-6 rounded-2xl max-w-sm w-full" onClick={e=>e.stopPropagation()}>
-                            <h3 className="text-lg font-bold text-white mb-2">Clear All Logs?</h3>
-                            <p className="text-slate-400 text-sm mb-4">This will permanently delete all system logs. This action cannot be undone.</p>
-                            <div className="flex gap-2">
-                                <button onClick={()=>setClearLogsModal(false)} className="flex-1 py-2 bg-slate-800 rounded-lg text-slate-300 text-sm">Cancel</button>
-                                <button onClick={handleClearLogs} className="flex-1 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-bold">Clear All</button>
+                            <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mb-4 mx-auto">
+                                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </div>
+                            <h3 className="text-lg font-bold text-white mb-2 text-center">Clear All Logs?</h3>
+                            <p className="text-slate-400 text-sm mb-6 text-center">This will permanently delete all system logs.<br/>This action cannot be undone.</p>
+                            <div className="flex gap-3">
+                                <button onClick={()=>setClearLogsModal(false)} className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 text-sm font-medium transition-colors">Cancel</button>
+                                <button onClick={handleClearLogs} className="flex-1 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-red-900/20 transition-colors">Clear All</button>
                             </div>
                         </motion.div>
                     </motion.div>
@@ -306,53 +308,55 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                             <StatCard title="Active Jobs" value={jobs.length} icon={<svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>} color="purple" />
                         </div>
 
-                        {/* User Delete Modal */}
+                        {/* PROFESSIONAL DELETE USER MODAL - FIXED CENTER */}
                         <AnimatePresence>
                             {deleteUserModal.open && (
                                 <motion.div 
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4 bg-black/80 backdrop-blur-sm"
+                                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm"
                                     onClick={() => setDeleteUserModal({open: false, id: null, name: ''})}
                                 >
                                     <motion.div 
-                                        initial={{ y: 100, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        exit={{ y: 100, opacity: 0 }}
-                                        className="bg-slate-900 border-t md:border border-red-500/30 p-6 md:p-8 rounded-t-2xl md:rounded-2xl shadow-2xl w-full md:max-w-md relative overflow-hidden"
+                                        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                                        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                                        transition={{ type: "spring", duration: 0.5 }}
+                                        className="bg-slate-900 border border-red-500/20 p-8 rounded-3xl shadow-2xl max-w-md w-full relative overflow-hidden"
                                         onClick={e => e.stopPropagation()}
                                     >
-                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 to-orange-600"></div>
-                                        <div className="md:hidden w-12 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 via-orange-500 to-red-600"></div>
                                         
-                                        <div className="flex items-start gap-4 mb-6">
-                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-red-900/20 flex items-center justify-center border border-red-500/20 flex-shrink-0">
-                                                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" /></svg>
-                                            </div>
-                                            <div>
-                                                <h3 className="text-xl font-bold text-white">Delete Account</h3>
-                                                <p className="text-slate-400 text-sm mt-1">Delete <strong>{deleteUserModal.name}</strong>? They will be moved to archives.</p>
-                                            </div>
+                                        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-1 ring-red-500/20">
+                                            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                        </div>
+                                        
+                                        <div className="text-center mb-6">
+                                            <h3 className="text-2xl font-bold text-white mb-2">Delete User?</h3>
+                                            <p className="text-slate-400">Are you sure you want to delete <span className="text-white font-bold">{deleteUserModal.name}</span>?</p>
                                         </div>
 
-                                        <div className="mb-6 relative">
-                                            <label className="block text-xs text-slate-500 uppercase font-bold tracking-wider mb-2">Reason (Required)</label>
+                                        <div className="mb-8 relative">
+                                            <label className="block text-xs text-slate-500 uppercase font-bold tracking-wider mb-2 text-left">Reason (Required)</label>
                                             <textarea 
                                                 value={deleteReason} 
                                                 onChange={e => { setDeleteReason(e.target.value); setValidationMsg(''); }}
-                                                className={`w-full bg-slate-950 border ${validationMsg ? 'border-red-500' : 'border-slate-700'} rounded-lg p-3 text-white text-sm focus:border-red-500 outline-none resize-none transition-colors`}
+                                                className={`w-full bg-slate-950 border ${validationMsg ? 'border-red-500' : 'border-slate-800'} rounded-2xl p-4 text-white text-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none resize-none transition-all placeholder:text-slate-600`}
                                                 rows="3"
                                                 placeholder="e.g. Violation of terms..."
                                                 autoFocus
                                             ></textarea>
-                                            {validationMsg && <span className="text-xs text-red-500 absolute -bottom-5 left-0">{validationMsg}</span>}
+                                            {validationMsg && <motion.span initial={{opacity:0, y:-10}} animate={{opacity:1,y:0}} className="text-xs text-red-500 absolute -bottom-6 left-0 flex items-center gap-1">
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                {validationMsg}
+                                            </motion.span>}
                                         </div>
 
-                                        <div className="flex gap-3 justify-end">
-                                            <button onClick={() => setDeleteUserModal({open: false, id: null, name: ''})} className="flex-1 px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
-                                            <button onClick={handleSoftDeleteUser} className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-900/20 transition-all flex items-center justify-center gap-2">
-                                                <span>Delete User</span>
+                                        <div className="flex gap-3">
+                                            <button onClick={() => setDeleteUserModal({open: false, id: null, name: ''})} className="flex-1 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
+                                            <button onClick={handleSoftDeleteUser} className="flex-1 py-3.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-900/20 transition-all">
+                                                Delete User
                                             </button>
                                         </div>
                                     </motion.div>
@@ -619,15 +623,21 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                     <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-4 md:p-6">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-lg md:text-xl font-bold text-white">System Logs</h2>
-                            <button onClick={()=>setClearLogsModal(true)} className="text-xs md:text-sm text-red-500 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-lg border border-red-500/20 transition-colors">
-                                Clear All
-                            </button>
+                            <div className="flex gap-3">
+                                <button onClick={fetchData} className="text-xs md:text-sm text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-lg border border-blue-500/20 transition-colors flex items-center gap-2">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                    Refresh
+                                </button>
+                                <button onClick={()=>setClearLogsModal(true)} className="text-xs md:text-sm text-red-500 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-lg border border-red-500/20 transition-colors">
+                                    Clear All
+                                </button>
+                            </div>
                         </div>
                         <div className="space-y-2 font-mono text-xs md:text-sm max-h-[600px] overflow-y-auto custom-scrollbar">
                              {logs.length > 0 ? logs.map((log) => (
                                 <div key={log.id} className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 text-slate-300 bg-slate-950/50 p-2 rounded border border-slate-800/50">
-                                    <span className="text-slate-500 text-[10px] md:text-xs min-w-[150px]">{new Date(log.timestamp).toLocaleString()}</span>
-                                    <span className={`font-bold text-[10px] md:text-xs min-w-[50px] ${
+                                    <span className="text-slate-500 text-[10px] md:text-xs min-w-[170px] flex-shrink-0">{new Date(log.timestamp).toLocaleString()}</span>
+                                    <span className={`font-bold text-[10px] md:text-xs min-w-[50px] flex-shrink-0 ${
                                         log.level === 'INFO' ? 'text-green-400' :
                                         log.level === 'WARN' ? 'text-yellow-400' :
                                         log.level === 'ERROR' ? 'text-red-400' : 'text-blue-400'

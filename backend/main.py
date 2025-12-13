@@ -363,7 +363,13 @@ def get_admin_jobs(db: Session = Depends(get_db)):
 @app.get("/admin/logs")
 def get_admin_logs(db: Session = Depends(get_db)):
     # Returns last 50 logs
-    return db.query(SystemLog).order_by(SystemLog.timestamp.desc()).limit(50).all()
+    logs = db.query(SystemLog).order_by(SystemLog.timestamp.desc()).limit(50).all()
+    return [{
+        "id": l.id,
+        "level": l.level,
+        "message": l.message,
+        "timestamp": (l.timestamp.isoformat() + "Z") if l.timestamp else None
+    } for l in logs]
 
 @app.delete("/admin/logs")
 def clear_system_logs(db: Session = Depends(get_db)):
@@ -431,7 +437,16 @@ def send_message(msg: MessageCreate, db: Session = Depends(get_db)):
 
 @app.get("/admin/messages")
 def get_admin_messages(db: Session = Depends(get_db)):
-    return db.query(Message).order_by(Message.timestamp.desc()).all()
+    msgs = db.query(Message).order_by(Message.timestamp.desc()).all()
+    return [{
+        "id": m.id,
+        "user_id": m.user_id,
+        "user_name": m.user_name,
+        "user_email": m.user_email,
+        "content": m.content,
+        "is_replied": m.is_replied,
+        "timestamp": (m.timestamp.isoformat() + "Z") if m.timestamp else None
+    } for m in msgs]
 
 class ReplyMessage(BaseModel):
     user_email: str
