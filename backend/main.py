@@ -102,7 +102,7 @@ def get_all_users(db: Session = Depends(get_db)):
 
 @app.get("/admin/users/deleted")
 def get_deleted_users(db: Session = Depends(get_db)):
-    users = db.query(User).filter(User.is_deleted == True).all()
+    users = db.query(User).filter(User.is_deleted == True).order_by(User.last_active.desc()).all()
     return [{"id": u.id, "full_name": u.full_name, "email": u.email, "deletion_reason": u.deletion_reason, "deleted_at": u.last_active} for u in users]
 
 @app.get("/admin/jobs")

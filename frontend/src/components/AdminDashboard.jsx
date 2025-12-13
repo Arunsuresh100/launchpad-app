@@ -53,18 +53,52 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                 axios.get('/admin/messages')
             ]);
             
+            // HELPER: Format UTC Date to Local string correctly
+            const formatDate = (dateStr) => {
+                if (!dateStr) return 'Never';
+                // Backend sends naive UTC (no Z). Append Z to force browser to treat as UTC, then convert to Local.
+                const safeDate = dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`;
+                return new Date(safeDate).toLocaleString();
+            };
+
+            // Process Users to add 'is_online' flag (Active < 5 mins ago)
+            const processUsers = (rawUsers) => {
+                return rawUsers.map(u => ({
+                    ...u,
+                    is_online: u.last_active && (new Date() - new Date(u.last_active.endsWith('Z') ? u.last_active : u.last_active + 'Z') < 5 * 60 * 1000)
+                }));
+            };
+
             setStats(statsRes.data);
-            setUsers(usersRes.data);
-            setDeletedUsers([...deletedUsersRes.data].reverse());
+            setUsers(processUsers(usersRes.data));
+            // Ensure deleted users are sorted DESC by deletion/active date
+            const sortedDeleted = [...deletedUsersRes.data].sort((a,b) => new Date(b.deleted_at || 0) - new Date(a.deleted_at || 0));
+            setDeletedUsers(sortedDeleted);
+            
             setJobs(jobsRes.data);
             setLogs(logsRes.data);
             setMessages(msgsRes.data);
+            
+            // Helper available to component scope? No, define outside or use inside render.
+            // Actually, let's attach the cleaner date to the object or just use a render helper.
+            // For now, I will use a render helper function inside the component.
+            return { formatDate }; // return to scope if needed, but easier to just define function inside component body or use this transformer.
             
         } catch (err) {
             console.error("Admin Fetch Error", err);
         } finally {
             setLoading(false);
         }
+    };
+
+    // Re-define helper for render scope
+    const formatDate = (dateStr) => {
+        if (!dateStr) return 'Never';
+        const safeDate = dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`;
+        return new Date(safeDate).toLocaleString('en-US', { 
+            month: 'short', day: 'numeric', year: 'numeric', 
+            hour: '2-digit', minute: '2-digit', hour12: true 
+        });
     };
 
     const showNotification = (msg, type='success') => {
@@ -407,7 +441,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                                 </td>
                                                 <td className="px-6 py-4"><span className="px-2 py-1 rounded bg-slate-700/50 text-slate-300 border border-slate-600/50 text-xs font-bold uppercase">User</span></td>
                                                 <td className="px-6 py-4">{u.is_online ? <span className="inline-flex items-center gap-1.5 text-green-400 font-medium"><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>Online</span> : <span className="inline-flex items-center gap-1.5 text-slate-500"><span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>Offline</span>}</td>
-                                                <td className="px-6 py-4 font-mono text-xs">{u.last_active ? new Date(u.last_active).toLocaleString() : 'Never'}</td>
+                                            <td className="px-6 py-4 font-mono text-xs">{formatDate(u.last_active)}</td>
                                                 <td className="px-6 py-4">
                                                     <button onClick={() => setDeleteUserModal({ open: true, id: u.id, name: u.full_name })} className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete">
                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -483,7 +517,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                     <div>
                                         <h3 className="font-bold text-white text-lg">{job.title} <span className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded border ml-2 ${job.contract_type === 'internship' ? 'bg-purple-500/10 border-purple-500/20 text-purple-400' : 'bg-blue-500/10 border-blue-500/20 text-blue-400'}`}>{job.contract_type === 'internship' ? 'Intern' : 'Full Time'}</span></h3>
                                         <p className="text-sm text-slate-400">{job.company} • {job.location}</p>
-                                        <p className="text-xs text-slate-500 mt-1">Posted: {new Date(job.date_posted).toLocaleDateString()}</p>
+                                        <p className="text-xs text-slate-500 mt-1">Posted: {formatDate(job.date_posted)}</p>
                                     </div>
                                     <button onClick={() => handleDeleteJob(job.id, job.title)} className="w-full md:w-auto p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors text-sm font-medium">
                                         Delete
@@ -512,7 +546,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                         <tr key={u.id}>
                                             <td className="px-6 py-4"><div><p className="font-medium text-slate-300">{u.full_name}</p><p className="text-xs text-slate-600">{u.email}</p></div></td>
                                             <td className="px-6 py-4 flex-1 break-words max-w-xs">{u.deletion_reason || 'No reason'}</td>
-                                            <td className="px-6 py-4 font-mono text-xs">{u.last_active ? new Date(u.last_active).toLocaleString() : 'N/A'}</td>
+                                            <td className="px-6 py-4 font-mono text-xs">{formatDate(u.deleted_at)}</td>
                                             <td className="px-6 py-4">
                                                 <button onClick={() => handleRestoreUser(u.id)} className="px-3 py-1 bg-green-500/10 text-green-400 rounded border border-green-500/20 text-xs font-bold uppercase">Restore</button>
                                             </td>
@@ -537,7 +571,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                         <div className="text-xs text-slate-500 bg-slate-900 p-2 rounded border border-slate-800 mb-2">
                                             <span className="text-slate-400 font-bold">Reason:</span> {u.deletion_reason || 'No reason'}
                                         </div>
-                                        <p className="text-[10px] text-slate-600 text-right">Last Active: {u.last_active ? new Date(u.last_active).toLocaleString() : 'N/A'}</p>
+                                        <p className="text-[10px] text-slate-600 text-right">Last Active: {formatDate(u.deleted_at)}</p>
                                     </div>
                                 )) : <div className="text-center p-6 text-slate-500">No deleted users.</div>}
                          </div>
