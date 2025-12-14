@@ -47,7 +47,9 @@ const ResumeUpload = () => {
             fetchJobs(response.data.extracted_skills);
         } catch (err) {
             console.error(err);
-            setError('Failed to process resume. Ensure the backend is running and the file is a PDF.');
+            // Show specific error from backend if available (e.g. "Not a valid resume")
+            const backendMsg = err.response?.data?.detail;
+            setError(backendMsg || 'Failed to process resume. Ensure the backend is running and the file is a PDF.');
         } finally {
             setUploading(false);
         }

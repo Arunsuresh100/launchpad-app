@@ -191,6 +191,39 @@ async def scan_resume(file: UploadFile = File(...)):
         else:
             text = extract_text_from_docx(contents)
             
+        # --- VALIDATION: Check if it's actually a resume ---
+        def is_valid_resume(text_content):
+            # Normalize
+            t = text_content.lower()
+            
+            # Keywords that STRONGLY suggest a resume/CV
+            # We expect at least a few of these to be present.
+            resume_keywords = [
+                "experience", "work history", "employment", "internship",
+                "education", "university", "college", "degree",
+                "skills", "technologies", "technical skills", "competencies",
+                "projects", "summary", "profile", "objective",
+                "certifications", "achievements", "languages",
+                "resume", "curriculum vitae", "cv",
+                "contact", "phone", "email", "linkedin", "github"
+            ]
+            
+            # Count matches (simple keyword presence)
+            match_count = 0
+            for kw in resume_keywords:
+                if kw in t:
+                    match_count += 1
+            
+            # Threshold: A valid resume should have at least 3 of these distinct keywords.
+            # (e.g. "Education", "Experience", "Skills" is a very common trio)
+            return match_count >= 3
+
+        if not is_valid_resume(text):
+             raise HTTPException(
+                 status_code=400, 
+                 detail="The uploaded document does not appear to be a valid Resume or CV. Please upload a professional resume file."
+             )
+
         # Comprehensive Skill Extraction Logic
         TECHNICAL_SKILLS = {
             # Languages
