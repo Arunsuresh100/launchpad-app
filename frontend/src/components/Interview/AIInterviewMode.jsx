@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 
 const AIInterviewMode = ({ onBack }) => {
@@ -228,8 +229,8 @@ const AIInterviewMode = ({ onBack }) => {
     };
 
     // --- RENDER ---
-    return (
-        <div className="fixed inset-0 z-50 bg-slate-950 text-white flex flex-col h-[100dvh] animate-fade-in-up">
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] bg-slate-950 text-white flex flex-col h-[100dvh] animate-fade-in-up">
             {/* Header / Quit */}
             <div className="flex-none flex justify-between items-center p-4 border-b border-gray-800 bg-slate-900/90 backdrop-blur z-20">
                 <div className="flex items-center gap-3">
@@ -462,7 +463,8 @@ const AIInterviewMode = ({ onBack }) => {
                     to { opacity: 1; transform: translateY(0); }
                 }
             `}</style>
-        </div>
+        </div>,
+        document.body
     );
 };
 
