@@ -246,7 +246,8 @@ const AIInterviewMode = ({ onBack }) => {
 
             {/* Scrollable Content Area */}
             <div className="flex-1 overflow-y-auto overflow-x-hidden relative w-full scroll-smooth">
-                <div className="min-h-full flex flex-col items-center justify-center p-4 md:p-8 w-full max-w-3xl mx-auto pb-32">
+                {/* Removed justify-center to prevent top-clipping on overflow */}
+                <div className="min-h-full flex flex-col items-center p-4 md:p-8 w-full max-w-3xl mx-auto pb-48 pt-10">
                     
                     {stage === 'upload' && (
                         <div className="w-full text-center space-y-8 animate-fade-in my-auto">

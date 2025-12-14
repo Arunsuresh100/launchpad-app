@@ -410,14 +410,26 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
             </div>
 
             <main className="max-w-7xl mx-auto p-4 md:p-8 space-y-6 md:space-y-8 animate-fade-in-up">
-                {/* Tabs */}
-                <div className="flex gap-2 md:gap-4 border-b border-slate-800 pb-1 overflow-x-auto no-scrollbar mask-linear">
-                    {['overview', 'jobs', 'deleted_users', 'messages', 'logs'].map(tab => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`px-3 py-2 text-xs md:text-sm font-bold uppercase tracking-wider transition-colors relative whitespace-nowrap flex-shrink-0 ${activeTab === tab ? 'text-blue-400' : 'text-slate-500 hover:text-white'}`}>
-                            {tab.replace('_', ' ')}
-                            {activeTab === tab && <motion.div layoutId="tab" className="absolute bottom-[-5px] left-0 right-0 h-0.5 bg-blue-400" />}
-                        </button>
-                    ))}
+                {/* Tabs - App-Like Segmented Control */}
+                <div className="flex justify-center mb-8">
+                     <div className="flex bg-slate-950 p-1.5 rounded-2xl border border-slate-800/50 overflow-x-auto no-scrollbar max-w-full md:max-w-fit shadow-inner">
+                        {['overview', 'jobs', 'deleted_users', 'messages', 'logs'].map(tab => (
+                            <button 
+                                key={tab} 
+                                onClick={() => setActiveTab(tab)} 
+                                className={`relative px-4 py-2 text-xs md:text-sm font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex-shrink-0 z-10 ${activeTab === tab ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                            >
+                                {activeTab === tab && (
+                                    <motion.div 
+                                        layoutId="activeTab" 
+                                        className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl shadow-lg shadow-blue-500/30 -z-10" 
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
+                                {tab.replace('_', ' ')}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 {activeTab === 'overview' && (
@@ -605,7 +617,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                         <input 
                                             type="date" 
                                             value={jobForm.date_posted ? jobForm.date_posted.split('T')[0] : new Date().toISOString().split('T')[0]} 
-                                            min={!editingJob ? new Date().toISOString().split('T')[0] : undefined}
+                                            min={new Date().toISOString().split('T')[0]}
                                             onChange={e=>setJobForm({...jobForm, date_posted: e.target.value})} 
                                             className="bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white w-full"
                                         />
