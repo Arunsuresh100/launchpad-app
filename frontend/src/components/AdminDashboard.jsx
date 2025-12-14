@@ -553,7 +553,19 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                     <div className="space-y-6">
                         <div className="flex justify-between items-center">
                             <div><h2 className="text-xl md:text-2xl font-bold text-white">Job Management</h2></div>
-                            <button onClick={() => { if(showJobForm && editingJob) { setEditingJob(null); setJobForm({ title: '', company: '', location: '', description: '', skills_required: '', contract_type: 'full_time', url: '', date_posted: ''}); } else { setShowJobForm(!showJobForm); } }} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-sm transition-colors flex items-center gap-2">
+                            <button onClick={() => { 
+                                if (showJobForm) {
+                                  // Reset form and close
+                                  setEditingJob(null);
+                                  setJobForm({ title: '', company: '', location: '', description: '', skills_required: '', contract_type: 'full_time', url: '', date_posted: ''});
+                                  setShowJobForm(false);
+                                } else {
+                                  // Open form for new job
+                                  setEditingJob(null);
+                                  setJobForm({ title: '', company: '', location: '', description: '', skills_required: '', contract_type: 'full_time', url: '', date_posted: ''});
+                                  setShowJobForm(true);
+                                }
+                            }} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-sm transition-colors flex items-center gap-2">
                                 {showJobForm ? (editingJob ? 'Cancel Edit' : 'Cancel') : '+ New Job'}
                             </button>
                         </div>
