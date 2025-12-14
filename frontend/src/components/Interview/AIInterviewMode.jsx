@@ -226,9 +226,9 @@ const AIInterviewMode = ({ onBack }) => {
             console.error(err);
             // Fallback if backend fails
             setFinalFeedback({
-                score: 5,
+                score: 0,
                 pros: ["Completed the interview session"],
-                cons: ["Could not retrieve detailed analysis from server."]
+                cons: ["Could not retrieve detailed analysis from server. Please check your connection."]
             });
         }
     };

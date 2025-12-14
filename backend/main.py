@@ -408,15 +408,15 @@ def verify_user_status(user_id: int, db: Session = Depends(get_db)):
 @app.get("/admin/stats")
 def get_admin_stats(db: Session = Depends(get_db)):
     # Exclude admins from stats
-    total_users = db.query(User).filter(User.role != 'admin').count()
+    # Also exclude deleted users if desired, usually stats show valid current users.
+    base_query = db.query(User).filter(User.role != 'admin', User.is_deleted == False)
     
-    # Active in last 24h (excluding admins)
-    active_boundary = datetime.utcnow() - timedelta(days=1)
-    active_users = db.query(User).filter(User.role != 'admin', User.last_active >= active_boundary).count()
+    total_users = base_query.count()
     
-    # For now, we don't track total unique resumes scanned in DB. 
-    # Returning a placeholder or 0 to be accurate to "DB state".
-    # In a real app, we would log every scan to a 'ScanLog' table.
+    # Active in last 15 minutes (Real-time "Online" status)
+    active_boundary = datetime.utcnow() - timedelta(minutes=15)
+    active_users = base_query.filter(User.last_active >= active_boundary).count()
+    
     total_resumes = 0 
     
     return {
@@ -424,6 +424,90 @@ def get_admin_stats(db: Session = Depends(get_db)):
         "active_users": active_users,
         "total_resumes": total_resumes
     }
+
+
+# ... [DeleteUserRequest class and delete_user_soft function remain unchanged] ...
+
+class InterviewEval(BaseModel):
+    transcript: List[dict] # [{question: str, answer: str}]
+
+@app.post("/interview/evaluate")
+def evaluate_interview(data: InterviewEval):
+    transcript = data.transcript
+    if not transcript:
+        return {"score": 0, "pros": ["None"], "cons": ["No answers recorded."]}
+
+    total_score = 0
+    word_count_score = 0
+    keyword_score = 0
+    communication_score = 0
+    
+    # Flatten tech skills for checking
+    all_tech_skills = set()
+    for cat, skills in TECHNICAL_SKILLS.items():
+        for s in skills:
+            all_tech_skills.add(s.lower())
+
+    # Soft skills / HR Keywords
+    hr_keywords = {"team", "collaborate", "leader", "challenge", "learn", "growth", "project", "deadline", "result", "success", "fail", "improve"}
+
+    valid_answers = 0
+    skipped_count = 0
+    
+    for entry in transcript:
+        ans = entry.get('answer', '').strip()
+        if not ans or ans == "(No Answer)" or ans == "SKIPPED":
+            skipped_count += 1
+            continue
+            
+        valid_answers += 1
+        ans_lower = ans.lower()
+        
+        # Word Count Scoring (Substance)
+        words = len(ans.split())
+        if words > 50: word_count_score += 3
+        elif words > 30: word_count_score += 2
+        elif words > 10: word_count_score += 1
+        
+        # Keyword Scoring (Technical)
+        tech_found = False
+        for skill in all_tech_skills:
+            if skill in ans_lower:
+                keyword_score += 1
+                tech_found = True
+        
+        # HR/Communication Scoring
+        for hr in hr_keywords:
+            if hr in ans_lower:
+                communication_score += 1
+
+    # STRICT FAIL CONDITIONS
+    if valid_answers == 0:
+         return {
+            "score": 0, 
+            "pros": ["Attempted the session"], 
+            "cons": ["You skipped every question. A zero score is assigned for no participation.", "Please answer at least one question to get a rating."]
+        }
+
+    raw_score = word_count_score + keyword_score + (communication_score * 0.5)
+    
+    # Penalty for skipping
+    # If you skip > 50% of questions, cap score at 5?
+    # No, simple deduction.
+    skip_penalty = skipped_count * 1.5 
+    
+    # Calc max potential: 5 questions * (2 word + 1 tech + 1 soft) = ~20
+    # Normalize
+    len_factor = len(transcript) if len(transcript) > 0 else 1
+    normalized = (raw_score / (len_factor * 3)) * 10 
+    
+    final_score = normalized - skip_penalty
+    
+    # Bounds
+    final_score = max(0, min(10, int(final_score)))
+    
+    # Minimum encouragement ONLY if attended reasonably well
+    if final_score < 2 and valid_answers > (len(transcript) / 2): final_score = 2
 
 
 
