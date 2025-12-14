@@ -201,6 +201,13 @@ async def scan_resume(file: UploadFile = File(...)):
              if "exceeds" in str(ve):
                   raise HTTPException(status_code=400, detail="Resume too long. Maximum 4 pages allowed.")
              raise ve
+        
+        # Check if text extraction worked
+        if not text or len(text.strip()) < 50:
+             raise HTTPException(
+                 status_code=400, 
+                 detail="Could not extract text from document. If this is a PDF, ensure it is text-based (not a scanned image)."
+             )
             
         # --- VALIDATION: Check if it's actually a resume ---
         def is_valid_resume(text_content):
@@ -232,7 +239,7 @@ async def scan_resume(file: UploadFile = File(...)):
         if not is_valid_resume(text):
              raise HTTPException(
                  status_code=400, 
-                 detail="The uploaded document does not appear to be a valid Resume or CV. Please upload a professional resume file."
+                 detail="The uploaded document does not appear to be a valid Resume or CV. Please upload a professional resume file containing keywords like 'Education', 'Experience', or 'Skills'."
              )
 
         # Comprehensive Skill Extraction Logic

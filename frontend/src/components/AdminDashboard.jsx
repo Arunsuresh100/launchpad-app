@@ -14,10 +14,18 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
     
     // Job Form State
     const [showJobForm, setShowJobForm] = useState(false);
+    const [editingJob, setEditingJob] = useState(null); // ID of job being edited
     const [jobForm, setJobForm] = useState({
         title: '', company: '', location: '', description: '', 
-        skills_required: '', contract_type: 'full_time', url: '' 
+        skills_required: '', contract_type: 'full_time', url: '', date_posted: '' 
     });
+    
+    // Modal States
+    const [deleteUserModal, setDeleteUserModal] = useState({ open: false, id: null, name: '' });
+    const [permDeleteModal, setPermDeleteModal] = useState({ open: false, id: null, name: '' });
+    const [clearLogsModal, setClearLogsModal] = useState(false);
+    const [deleteModal, setDeleteModal] = useState({ open: false, id: null }); // Message Delete
+    const [deleteJobModal, setDeleteJobModal] = useState({ open: false, id: null, title: '' }); // Job Delete
 
     const [logs, setLogs] = useState([]); 
     const [messages, setMessages] = useState([]); 
@@ -64,8 +72,6 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                     hour: '2-digit', minute: '2-digit', hour12: true 
                 });
             };
-
-
 
             // Process Users: Add 'is_online' flag AND Sort (Online first, then Last Active)
             const processUsers = (rawUsers) => {
@@ -140,26 +146,27 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
         }
     };
 
-    const handleDeleteJob = async (id, title) => {
-        if (!window.confirm(`Delete job: ${title}?`)) return;
+    // New Delete Handler using Modal
+    const handleDeleteJob = (id, title) => {
+        setDeleteJobModal({ open: true, id, title });
+    };
+
+    const confirmDeleteJob = async () => {
+        if (!deleteJobModal.id) return;
         try {
-            await axios.delete(`/admin/jobs/${id}`);
-            showNotification("Job deleted.");
+            await axios.delete(`/admin/jobs/${deleteJobModal.id}`);
+            showNotification("Job deleted successfully.");
             fetchData();
+            setDeleteJobModal({ open: false, id: null, title: '' });
         } catch (err) {
             console.error(err);
             showNotification("Failed to delete job.", 'error');
         }
     };
-    
-    // User Soft Delete State
-    const [deleteUserModal, setDeleteUserModal] = useState({ open: false, id: null, name: '' });
+    // User Soft Delete Handlers
     const [deleteReason, setDeleteReason] = useState('');
     const [validationMsg, setValidationMsg] = useState('');
     
-    // PERMANENT DELETE STATE
-    const [permDeleteModal, setPermDeleteModal] = useState({ open: false, id: null, name: '' });
-
     const handleSoftDeleteUser = async () => {
         if (!deleteReason.trim()) {
             setValidationMsg("Reason is compulsory!");
@@ -203,7 +210,8 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
     };
     
     // Logs Clear
-    const [clearLogsModal, setClearLogsModal] = useState(false);
+    // Logs Clear
+
     const handleClearLogs = async () => {
         setClearLogsModal(false);
         try {
@@ -217,7 +225,8 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
     };
 
     // Message Delete State
-    const [deleteModal, setDeleteModal] = useState({ open: false, id: null });
+    // Message Delete State
+
 
     const handleDeleteMessage = (id) => {
         setDeleteModal({ open: true, id });
@@ -621,16 +630,25 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                     <div className="flex items-center gap-2">
                                         <button 
                                             onClick={()=>{
-                                                setJobForm({...job});
+                                                setJobForm({
+                                                    title: job.title,
+                                                    company: job.company,
+                                                    location: job.location,
+                                                    description: job.description,
+                                                    skills_required: job.skills_required,
+                                                    contract_type: job.contract_type,
+                                                    url: job.url,
+                                                    date_posted: job.date_posted // Keep original date
+                                                });
                                                 setEditingJob(job.id);
                                                 setShowJobForm(true);
-                                                window.scrollTo(0, 0);
+                                                window.scrollTo({ top: 0, behavior: 'smooth' });
                                             }}
                                             className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-lg transition-colors text-sm font-medium border border-slate-700"
                                         >
                                             Edit
                                         </button>
-                                        <button onClick={() => handleDeleteJob(job.id, job.title)} className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors text-sm font-medium border border-red-500/10">
+                                        <button onClick={() => setDeleteJobModal({ open: true, id: job.id, title: job.title })} className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors text-sm font-medium border border-red-500/10">
                                             Delete
                                         </button>
                                     </div>
@@ -638,6 +656,33 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                              ))}
                              {jobs.length === 0 && <p className="text-slate-500 text-center py-8">No jobs posted yet.</p>}
                         </div>
+
+                        {/* Delete Job Modal */}
+                        <AnimatePresence>
+                            {deleteJobModal.open && (
+                                <motion.div 
+                                    initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} 
+                                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm" 
+                                    onClick={() => setDeleteJobModal({ open: false, id: null, title: '' })}
+                                >
+                                    <motion.div 
+                                        initial={{scale:0.95, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.95, opacity:0}} 
+                                        className="bg-slate-900 border border-slate-700 p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center relative" 
+                                        onClick={e => e.stopPropagation()}
+                                    >
+                                         <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mb-4 mx-auto ring-1 ring-red-500/20">
+                                            <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </div>
+                                        <h3 className="text-lg font-bold text-white mb-2">Delete Job?</h3>
+                                        <p className="text-slate-400 text-sm mb-6">Are you sure you want to delete <span className="text-white font-medium">"{deleteJobModal.title}"</span>?</p>
+                                        <div className="flex gap-3">
+                                            <button onClick={() => setDeleteJobModal({ open: false, id: null, title: '' })} className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-medium transition-colors">Cancel</button>
+                                            <button onClick={confirmDeleteJob} className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-900/20">Delete</button>
+                                        </div>
+                                    </motion.div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 )}
                 

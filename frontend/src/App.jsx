@@ -36,12 +36,24 @@ function App() {
   const [showToast, setShowToast] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(() => {
+    // Try to recover page from storage, but fallback to auth/home logic
+    const savedPage = localStorage.getItem('currentPage');
     if (localStorage.getItem('user')) {
       const savedUser = JSON.parse(localStorage.getItem('user'));
-      if (savedUser.role === 'admin') return 'admin';
+      if (savedUser.role === 'admin') return savedPage === 'admin' ? 'admin' : savedPage || 'home'; // Admin can go elsewhere too? Usually admin panel is 'admin'
+      // If user is valid, allow savedPage if it's not 'auth' or 'admin' (unless they are admin)
+      if (savedPage && savedPage !== 'auth' && savedPage !== 'admin') return savedPage;
+      return 'home';
     }
     return 'home';
   });
+
+  // Persist Page State
+  useEffect(() => {
+     if (currentPage && currentPage !== 'auth') {
+         localStorage.setItem('currentPage', currentPage);
+     }
+  }, [currentPage]);
 
   const handleGithubClick = () => {
     setShowToast(true);
