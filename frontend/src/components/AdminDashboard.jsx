@@ -118,26 +118,33 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
         setTimeout(() => setNotification(''), 3000);
     };
     
-    // ... Job handlers ...
     const handleJobSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/admin/jobs', jobForm);
-            showNotification(`Job "${jobForm.title}" posted successfully.`);
+            if (editingJob) {
+                await axios.put(`/admin/jobs/${editingJob}`, jobForm);
+                showNotification("Job updated successfully.");
+                setEditingJob(null);
+            } else {
+                await axios.post('/admin/jobs', jobForm);
+                showNotification("Job posted successfully.");
+            }
             setShowJobForm(false);
-            setJobForm({title: '', company: '', location: '', description: '', skills_required: '', contract_type: 'full_time', url: ''});
-            fetchData(); 
+            setJobForm({ title: '', company: '', location: '', description: '', skills_required: '', contract_type: 'full_time', url: '', date_posted: ''});
+            fetchData();
         } catch (err) {
             console.error(err);
-            showNotification("Failed to post job.", 'error');
+            // Handle specific backend error for date validation
+            const msg = err.response?.data?.detail || "Failed to save job.";
+            showNotification(msg, 'error');
         }
     };
 
     const handleDeleteJob = async (id, title) => {
+        if (!window.confirm(`Delete job: ${title}?`)) return;
         try {
             await axios.delete(`/admin/jobs/${id}`);
-            showNotification(`Job "${title}" deleted.`);
-            setJobs(jobs.filter(j => j.id !== id));
+            showNotification("Job deleted.");
             fetchData();
         } catch (err) {
             console.error(err);
@@ -546,14 +553,15 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                     <div className="space-y-6">
                         <div className="flex justify-between items-center">
                             <div><h2 className="text-xl md:text-2xl font-bold text-white">Job Management</h2></div>
-                            <button onClick={() => setShowJobForm(!showJobForm)} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-sm transition-colors flex items-center gap-2">
-                                {showJobForm ? 'Cancel' : '+ New Job'}
+                            <button onClick={() => { if(showJobForm && editingJob) { setEditingJob(null); setJobForm({ title: '', company: '', location: '', description: '', skills_required: '', contract_type: 'full_time', url: '', date_posted: ''}); } else { setShowJobForm(!showJobForm); } }} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-sm transition-colors flex items-center gap-2">
+                                {showJobForm ? (editingJob ? 'Cancel Edit' : 'Cancel') : '+ New Job'}
                             </button>
                         </div>
 
                         <AnimatePresence>
                         {showJobForm && (
                             <motion.form initial={{height:0, opacity:0}} animate={{height:'auto', opacity:1}} exit={{height:0, opacity:0}} onSubmit={handleJobSubmit} className="bg-slate-900 border border-slate-800 p-4 md:p-6 rounded-xl space-y-4 overflow-hidden">
+                                <h3 className="text-lg font-bold text-white mb-2">{editingJob ? 'Edit Job' : 'Create New Job'}</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <input value={jobForm.title} onChange={e=>setJobForm({...jobForm, title: e.target.value})} placeholder="Job Title *" required className="bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white w-full"/>
                                     <input value={jobForm.company} onChange={e=>setJobForm({...jobForm, company: e.target.value})} placeholder="Company *" required className="bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white w-full"/>
@@ -566,9 +574,26 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                     </select>
                                 </div>
                                 <textarea value={jobForm.description} onChange={e=>setJobForm({...jobForm, description: e.target.value})} placeholder="Job Description *" required className="bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white w-full h-24"/>
-                                <input value={jobForm.skills_required} onChange={e=>setJobForm({...jobForm, skills_required: e.target.value})} placeholder="Skills (comma separated)" className="bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white w-full"/>
-                                <input value={jobForm.url} onChange={e=>setJobForm({...jobForm, url: e.target.value})} placeholder="Application URL (Required) *" required className="bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white w-full"/>
-                                <button type="submit" className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg">Publish Job</button>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                     <input value={jobForm.skills_required} onChange={e=>setJobForm({...jobForm, skills_required: e.target.value})} placeholder="Skills (comma separated)" className="bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white w-full"/>
+                                     <input value={jobForm.url} onChange={e=>setJobForm({...jobForm, url: e.target.value})} placeholder="Application URL (Required) *" required className="bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white w-full"/>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="flex flex-col">
+                                        <label className="text-xs text-gray-400 mb-1 ml-1">Date Posted (Visible From)</label>
+                                        <input 
+                                            type="date" 
+                                            value={jobForm.date_posted ? jobForm.date_posted.split('T')[0] : new Date().toISOString().split('T')[0]} 
+                                            min={!editingJob ? new Date().toISOString().split('T')[0] : undefined}
+                                            onChange={e=>setJobForm({...jobForm, date_posted: e.target.value})} 
+                                            className="bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white w-full"
+                                        />
+                                    </div>
+                                </div>
+
+                                <button type="submit" className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg">
+                                    {editingJob ? 'Update Job' : 'Publish Job'}
+                                </button>
                             </motion.form>
                         )}
                         </AnimatePresence>
@@ -581,9 +606,22 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                         <p className="text-sm text-slate-400">{job.company} • {job.location}</p>
                                         <p className="text-xs text-slate-500 mt-1">Posted: {formatDate(job.date_posted)}</p>
                                     </div>
-                                    <button onClick={() => handleDeleteJob(job.id, job.title)} className="w-full md:w-auto p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors text-sm font-medium">
-                                        Delete
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        <button 
+                                            onClick={()=>{
+                                                setJobForm({...job});
+                                                setEditingJob(job.id);
+                                                setShowJobForm(true);
+                                                window.scrollTo(0, 0);
+                                            }}
+                                            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-lg transition-colors text-sm font-medium border border-slate-700"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button onClick={() => handleDeleteJob(job.id, job.title)} className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors text-sm font-medium border border-red-500/10">
+                                            Delete
+                                        </button>
+                                    </div>
                                 </div>
                              ))}
                              {jobs.length === 0 && <p className="text-slate-500 text-center py-8">No jobs posted yet.</p>}

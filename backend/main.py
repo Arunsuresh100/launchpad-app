@@ -43,6 +43,8 @@ def get_db():
 # --- UTILS ---
 def extract_text_from_pdf(file_bytes):
     with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+        if len(pdf.pages) > 4:
+            raise ValueError("PDF exceeds 4 pages limit.")
         text = ""
         for page in pdf.pages:
             text += page.extract_text() or ""
@@ -186,10 +188,19 @@ async def scan_resume(file: UploadFile = File(...)):
     try:
         contents = await file.read()
         
-        if file.filename.endswith('.pdf'):
-            text = extract_text_from_pdf(contents)
-        else:
-            text = extract_text_from_docx(contents)
+        # Check size (rough check: 5MB limit)
+        if len(contents) > 5 * 1024 * 1024:
+             raise HTTPException(status_code=400, detail="File too large. Maximum size is 5MB.")
+
+        try:
+            if file.filename.endswith('.pdf'):
+                text = extract_text_from_pdf(contents)
+            else:
+                text = extract_text_from_docx(contents)
+        except ValueError as ve:
+             if "exceeds" in str(ve):
+                  raise HTTPException(status_code=400, detail="Resume too long. Maximum 4 pages allowed.")
+             raise ve
             
         # --- VALIDATION: Check if it's actually a resume ---
         def is_valid_resume(text_content):
@@ -451,8 +462,7 @@ class JobCreate(BaseModel):
     skills_required: str
     contract_type: str = "full_time"
     url: Optional[str] = None
-
-
+    date_posted: Optional[datetime] = None
 
 @app.get("/admin/logs")
 def get_admin_logs(db: Session = Depends(get_db)):
@@ -475,6 +485,18 @@ def clear_system_logs(db: Session = Depends(get_db)):
 
 @app.post("/admin/jobs")
 def create_job(job: JobCreate, db: Session = Depends(get_db)):
+    # Validate date
+    post_date = job.date_posted or datetime.utcnow()
+    if post_date > datetime.utcnow() + timedelta(days=1): # Allow small buffer, but generally no future posts far ahead
+        # Actually user wants "previous date is not accepted" - usually means DEADLINE. 
+        # But if they mean "Do not backdate posts", then:
+        pass 
+    
+    # If user meant "Do not allow selecting PAST dates" for a NEW post (e.g. valid from):
+    # Let's enforce that for manual entry, it must be today or future.
+    if job.date_posted and job.date_posted.date() < datetime.utcnow().date():
+         raise HTTPException(status_code=400, detail="Cannot post a job with a past date.")
+
     new_job = JobPost(
         title=job.title,
         company=job.company,
@@ -483,7 +505,7 @@ def create_job(job: JobCreate, db: Session = Depends(get_db)):
         skills_required=job.skills_required,
         contract_type=job.contract_type,
         url=job.url,
-        date_posted=datetime.utcnow(),
+        date_posted=post_date,
         source="Internal Admin"
     )
     db.add(new_job)
@@ -491,6 +513,76 @@ def create_job(job: JobCreate, db: Session = Depends(get_db)):
     db.refresh(new_job)
     log_event(db, "SYSTEM", f"New job posted: {new_job.title} at {new_job.company}")
     return new_job
+
+@app.put("/admin/jobs/{job_id}")
+def update_job(job_id: int, job: JobCreate, db: Session = Depends(get_db)):
+    db_job = db.query(JobPost).filter(JobPost.id == job_id).first()
+    if not db_job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    db_job.title = job.title
+    db_job.company = job.company
+    db_job.location = job.location
+    db_job.description = job.description
+    db_job.skills_required = job.skills_required
+    db_job.contract_type = job.contract_type
+    db_job.url = job.url
+    if job.date_posted:
+        db_job.date_posted = job.date_posted
+        
+    db.commit()
+    log_event(db, "INFO", f"Job updated: {job.title}")
+    return db_job
+
+# --- INTERVIEW PREP AI ---
+class InterviewGenRequest(BaseModel):
+    resume_text: str
+
+@app.post("/interview/generate")
+def generate_interview_questions(req: InterviewGenRequest):
+    # Mock AI Logic to extract context and generate questions
+    text = req.resume_text.lower()
+    questions = []
+    
+    # Base
+    questions.append("Tell me about yourself and your background.")
+    
+    # Experience based
+    if "experience" in text or "work history" in text:
+        questions.append("Can you describe a challenging situation you faced in your previous role and how you handled it?")
+        questions.append("What is your biggest professional achievement so far?")
+    
+    # Project based
+    if "project" in text:
+        questions.append("Pick one of your projects listed on your resume. deeply explain the architecture and your specific contribution.")
+        questions.append("What were the technical trade-offs you made in your projects?")
+
+    # Skill based (Simple keyword matching)
+    if "react" in text:
+        questions.append("I see you know React. Can you explain the Virtual DOM and how it improves performance?")
+    if "python" in text:
+        questions.append("Since you use Python, can you explain the difference between a list and a tuple?")
+    if "node" in text:
+        questions.append("Explain the event loop in Node.js.")
+    if "sql" in text or "database" in text:
+        questions.append("How do you optimize a slow SQL query?")
+    
+    # Behavioral/Closing
+    questions.append("Where do you see yourself in 5 years?")
+    questions.append("Why do you want to join our company specifically?")
+    
+    # Ensure we have about 5-10 questions
+    import random
+    if len(questions) < 5:
+        defaults = [
+            "What are your strength and weaknesses?",
+            "Describe a time you had a conflict with a coworker.",
+            "How do you prioritize tasks under pressure?",
+            "What motivates you?"
+        ]
+        questions.extend(random.sample(defaults, 5 - len(questions)))
+    
+    return questions[:10]
 
 @app.delete("/admin/jobs/{job_id}")
 def delete_job(job_id: int, db: Session = Depends(get_db)):

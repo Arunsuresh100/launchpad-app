@@ -360,8 +360,11 @@ const APTITUDE_QUESTIONS = [
     }
 ];
 
+import AIInterviewMode from './Interview/AIInterviewMode';
+
 const InterviewPrep = () => {
     const [mode, setMode] = useState(null); 
+    const [showAI, setShowAI] = useState(false);
     const [started, setStarted] = useState(false);
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [userAnswers, setUserAnswers] = useState({}); 
@@ -428,6 +431,11 @@ const InterviewPrep = () => {
         setMode(null); 
     };
 
+    // --- RENDER: AI Mode ---
+    if (showAI) {
+        return <AIInterviewMode onBack={() => setShowAI(false)} />;
+    }
+
     // --- RENDER: MODE SELECTION ---
     if (!mode) {
         return (
@@ -437,7 +445,7 @@ const InterviewPrep = () => {
                     Select a track to begin your preparation. Questions are randomized and non-repetitive in each session.
                 </p>
 
-                <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+                <div className="grid md:grid-cols-3 gap-6 md:gap-8">
                     {/* Technical Card */}
                     <div 
                         onClick={() => setMode('technical')}
@@ -463,6 +471,20 @@ const InterviewPrep = () => {
                         <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Aptitude & Logic</h3>
                         <p className="text-sm md:text-base text-gray-400">
                             Sharpen skills with math, logic, and puzzles.
+                        </p>
+                    </div>
+
+                    {/* AI HR Interview Card (New) */}
+                    <div 
+                        onClick={() => setShowAI(true)}
+                        className="bg-gray-800 p-6 md:p-8 rounded-2xl border border-gray-700 hover:border-pink-500 cursor-pointer transition-all hover:bg-gray-800/80 group shadow-lg hover:shadow-pink-500/20"
+                    >
+                        <div className="w-16 h-16 md:w-20 md:h-20 bg-pink-500/20 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+                             <svg className="w-8 h-8 md:w-10 md:h-10 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                        </div>
+                        <h3 className="text-xl md:text-2xl font-bold text-white mb-2">AI HR Interview</h3>
+                        <p className="text-sm md:text-base text-gray-400">
+                            Mock interview with AI Voice agent based on your resume.
                         </p>
                     </div>
                 </div>
