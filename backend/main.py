@@ -968,6 +968,89 @@ def ats_check(data: ATSRequest):
         "missing_keywords": missing[:20]  # Top 20
     }
 
+class InterviewEval(BaseModel):
+    transcript: List[dict] # [{question: str, answer: str}]
+
+@app.post("/interview/evaluate")
+def evaluate_interview(data: InterviewEval):
+    transcript = data.transcript
+    if not transcript:
+        return {"score": 0, "pros": ["None"], "cons": ["No answers recorded."]}
+
+    total_score = 0
+    word_count_score = 0
+    keyword_score = 0
+    
+    # Flatten tech skills for checking
+    all_tech_skills = set()
+    for cat, skills in TECHNICAL_SKILLS.items():
+        for s in skills:
+            all_tech_skills.add(s.lower())
+
+    valid_answers = 0
+    
+    for entry in transcript:
+        ans = entry.get('answer', '').strip()
+        if not ans or ans == "(No Answer)" or ans == "SKIPPED":
+            continue
+            
+        valid_answers += 1
+        
+        # Word Count Scoring (Soft check for substance)
+        words = len(ans.split())
+        if words > 30: word_count_score += 2
+        elif words > 10: word_count_score += 1
+        
+        # Keyword Scoring (Check for tech terms)
+        ans_lower = ans.lower()
+        for skill in all_tech_skills:
+            if skill in ans_lower:
+                keyword_score += 1
+
+    # Base score computation
+    # Max possible logical score per question approx 5 (2 length + 3 keywords)
+    # We normalize against number of questions asked
+    if valid_answers == 0:
+         return {
+            "score": 0, 
+            "pros": ["Attempted to start."], 
+            "cons": ["No valid answers provided. Please try to speak clearly or check your microphone."]
+        }
+
+    raw_score = word_count_score + keyword_score
+    # Target: average good answer gets ~3-4 points.
+    # 5 questions * 4 = 20 points max raw typically.
+    # We scale raw_score / (num_questions * 2) * 10, clipped at 10.
+    
+    final_score = min(10, int((raw_score / (len(transcript) * 3 if len(transcript) > 0 else 1)) * 10))
+    if final_score < 3 and valid_answers > 0: final_score = 3 # Minimum encouragement
+
+    pros = []
+    cons = []
+
+    if valid_answers == len(transcript):
+        pros.append("You answered every question!")
+    if word_count_score > len(transcript):
+        pros.append("Good elaboration on your answers.")
+    if keyword_score > 2:
+        pros.append(f"Detected {keyword_score} technical keywords in your speech.")
+    
+    if valid_answers < len(transcript):
+        cons.append(f"You skipped {len(transcript) - valid_answers} questions.")
+    if word_count_score < len(transcript):
+        cons.append("Try to give longer, more detailed answers (STAR method).")
+    if keyword_score == 0:
+        cons.append("Try to mention specific technologies or skills you know.")
+
+    if not pros: pros.append("Good start, keep practicing!")
+    if not cons: cons.append("Excellent performance!")
+
+    return {
+        "score": final_score,
+        "pros": pros,
+        "cons": cons
+    }
+
 # --- SERVE STATIC FRONTEND FILES ---
 
 # CRITICAL: This MUST be the last route in your file.
