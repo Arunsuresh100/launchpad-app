@@ -193,16 +193,37 @@ def reset_database_force():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# --- PRODUCTION RESET TOOL (TEMPORARY) ---
-@app.post("/admin/reset-prod-db")
+
+# --- PRODUCTION RESET TOOL ---
+@app.api_route("/admin/reset-prod-db", methods=["GET", "POST"])
 def reset_production_database(db: Session = Depends(get_db)):
     try:
+        # 1. Delete DB Records
         rows = db.query(UserActivity).delete()
         db.commit()
-        return {"status": "success", "message": f"Successfully deleted {rows} activity records from Production DB."}
+        
+        # 2. Delete Uploaded Files (Physical)
+        deleted_files = 0
+        upload_dir = "./uploads"
+        if os.path.exists(upload_dir):
+            for f in os.listdir(upload_dir):
+                file_path = os.path.join(upload_dir, f)
+                try:
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+                        deleted_files += 1
+                except Exception as e:
+                    print(f"Error deleting {f}: {e}")
+
+        return {
+            "status": "success", 
+            "message": f"RESET COMPLETE. Deleted {rows} activity logs and {deleted_files} uploaded files from server.",
+            "action_required": "Please refresh your Admin Dashboard."
+        }
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Reset failed: {str(e)}")
+
 
 @app.post("/scan-resume")
 async def scan_resume(file: UploadFile = File(...), db: Session = Depends(get_db)):
