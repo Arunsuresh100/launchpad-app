@@ -1047,6 +1047,37 @@ def ats_check(data: ATSRequest, db: Session = Depends(get_db)):
     clean_jd = clean_text_v2(data.job_description)
     clean_resume = clean_text_v2(data.resume_text)
     
+    # --- INTELLIGENT EXPANSION FOR SHORT INPUTS ---
+    # If user types "Software Development" (short), we inject context
+    if len(clean_jd) < 150:
+        clean_jd_lower = clean_jd.lower()
+        expanded_context = []
+        
+        # Check against known technical areas to infer requirements
+        # We use the global TECHNICAL_SKILLS dict
+        for category, skills in TECHNICAL_SKILLS.items():
+            # If the category roughly matches the input
+            if category.lower() in clean_jd_lower or clean_jd_lower in category.lower():
+                expanded_context.extend(skills)
+            
+            # Or if specific high-level terms match
+            if "frontend" in clean_jd_lower and category == "Frontend": expanded_context.extend(skills)
+            if "backend" in clean_jd_lower and category == "Backend": expanded_context.extend(skills)
+            if "scien" in clean_jd_lower and category == "Data Science": expanded_context.extend(skills) # Data Scientist
+            if "design" in clean_jd_lower and category == "Design": expanded_context.extend(skills)
+
+        # Fallback: If "Software" or "Developer" genernally, dump common langs
+        if "software" in clean_jd_lower or "developer" in clean_jd_lower:
+             if not expanded_context:
+                 # Add generic stack if nothing specific found
+                 expanded_context.extend(["python", "javascript", "java", "react", "sql", "git", "communication", "problem solving"])
+
+        if expanded_context:
+            # Append inferred skills to the JD text so Vectorizer sees them
+            clean_jd += " " + " ".join(expanded_context).lower()
+            
+    # ----------------------------------------------
+    
     if not clean_jd or not clean_resume:
          return {"score": 0, "matched_keywords": [], "missing_keywords": ["Content empty or unreadable"]}
     

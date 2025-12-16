@@ -8,6 +8,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
     const [users, setUsers] = useState([]);
     const [deletedUsers, setDeletedUsers] = useState([]); 
     const [jobs, setJobs] = useState([]);
+    const [analytics, setAnalytics] = useState(null); // New Analytics State
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
     const [notification, setNotification] = useState('');
@@ -51,14 +52,15 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
 
     const fetchData = async () => {
         try {
-            // Unpack 6 responses strictly
-            const [statsRes, usersRes, deletedUsersRes, jobsRes, logsRes, msgsRes] = await Promise.all([
+            // Unpack responses
+            const [statsRes, usersRes, deletedUsersRes, jobsRes, logsRes, msgsRes, analyticsRes] = await Promise.all([
                 axios.get('/admin/stats'),
                 axios.get('/admin/users'),
                 axios.get('/admin/users/deleted'),
                 axios.get('/admin/jobs'),
                 axios.get('/admin/logs'),
-                axios.get('/admin/messages')
+                axios.get('/admin/messages'),
+                axios.get('/admin/analytics')
             ]);
             
             // HELPER: Format UTC Date to Local string correctly
@@ -98,6 +100,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
             setJobs(jobsRes.data);
             setLogs(logsRes.data);
             setMessages(msgsRes.data);
+            setAnalytics(analyticsRes.data); // Set Analytics
             
             return { formatDate }; 
             
@@ -412,8 +415,8 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
             <main className="max-w-7xl mx-auto p-4 md:p-8 space-y-6 md:space-y-8 animate-fade-in-up">
                 {/* Tabs */}
                 <div className="flex gap-2 md:gap-4 border-b border-slate-800 pb-1 overflow-x-auto no-scrollbar mask-linear">
-                    {['overview', 'jobs', 'deleted_users', 'messages', 'logs'].map(tab => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`px-3 py-2 text-xs md:text-sm font-bold uppercase tracking-wider transition-colors whitespace-nowrap flex-shrink-0 ${activeTab === tab ? 'text-blue-400' : 'text-slate-500 hover:text-white'}`}>
+                    {['overview', 'analytics', 'jobs', 'deleted_users', 'messages', 'logs'].map(tab => (
+                        <button key={tab} onClick={() => setActiveTab(tab)} className={`px-3 py-2 text-xs md:text-sm font-bold uppercase tracking-wider transition-colors whitespace-nowrap flex-shrink-0 ${activeTab === tab ? 'text-blue-400 border-b-2 border-blue-400' : 'text-slate-500 hover:text-white'}`}>
                             {tab.replace('_', ' ')}
                         </button>
                     ))}
@@ -428,7 +431,104 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                             <StatCard title="Active Jobs" value={jobs.length} icon={<svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>} color="purple" />
                         </div>
 
-                        {/* PROFESSIONAL DELETE USER MODAL - FIXED CENTER */}
+                        {/* ANALYTICS TAB CONTENT */}
+                        {activeTab === 'analytics' && analytics && (
+                            <div className="space-y-8 animate-fade-in-up">
+                                <h2 className="text-xl font-bold text-white mb-4">Detailed Analytics</h2>
+                                
+                                {/* 3 CIRCLES ROW */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {/* Circle 1: Resume Uploads */}
+                                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
+                                        <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
+                                            <svg className="w-full h-full transform -rotate-90">
+                                                <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                                <circle className="text-blue-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.resume_uploads, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                            </svg>
+                                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                                                <span className="text-3xl font-bold text-white block">{analytics.resume_uploads}</span>
+                                                <span className="text-[10px] text-slate-400 uppercase tracking-widest">Uploads</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-sm text-slate-400 text-center">Resumes Uploaded (Job Search)</p>
+                                    </div>
+
+                                    {/* Circle 2: ATS Checks */}
+                                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
+                                        <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
+                                            <svg className="w-full h-full transform -rotate-90">
+                                                <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                                <circle className="text-purple-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.ats_checks, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                            </svg>
+                                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                                                <span className="text-3xl font-bold text-white block">{analytics.ats_checks}</span>
+                                                <span className="text-[10px] text-slate-400 uppercase tracking-widest">Scans</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-sm text-slate-400 text-center">ATS Checks Performed</p>
+                                    </div>
+
+                                    {/* Circle 3: Interviews */}
+                                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
+                                        <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
+                                            <svg className="w-full h-full transform -rotate-90">
+                                                <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                                <circle className="text-green-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.interviews_attended, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                            </svg>
+                                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                                                <span className="text-3xl font-bold text-white block">{analytics.interviews_attended}</span>
+                                                <span className="text-[10px] text-slate-400 uppercase tracking-widest">Interviews</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-sm text-slate-400 text-center">Mock Interviews Completed</p>
+                                    </div>
+                                </div>
+
+                                {/* RECENT ACTIVITY LIST */}
+                                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                                    <div className="p-4 md:p-6 border-b border-slate-800 bg-slate-800/30">
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <span className="animate-pulse w-2 h-2 rounded-full bg-blue-400"></span>
+                                            Recent Live Activity
+                                        </h3>
+                                    </div>
+                                    <div className="divide-y divide-slate-800 max-h-[500px] overflow-y-auto custom-scrollbar">
+                                        {analytics.recent_activities.length > 0 ? (
+                                            analytics.recent_activities.map((act, idx) => (
+                                                <div key={idx} className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 hover:bg-slate-800/20 transition-colors">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0
+                                                            ${act.type === 'resume_upload' ? 'bg-blue-600/20 text-blue-400' :
+                                                              act.type === 'ats_check' ? 'bg-purple-600/20 text-purple-400' :
+                                                              'bg-green-600/20 text-green-400'}`}
+                                                        >
+                                                            {act.type === 'resume_upload' ? 'UP' : act.type === 'ats_check' ? 'ATS' : 'INT'}
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-bold text-white">{act.user_name || "Guest User"}</p>
+                                                            <p className="text-xs text-slate-500 capitalize">{act.type.replace('_', ' ')}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col md:items-end gap-1 w-full md:w-auto pl-14 md:pl-0">
+                                                        <span className="px-2 py-1 bg-slate-800 rounded text-xs text-slate-300 font-mono border border-slate-700">
+                                                            {act.details}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-600">
+                                                            {formatDate(act.timestamp)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="p-8 text-center text-slate-500">No recent activity found.</div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         <AnimatePresence>
                             {deleteUserModal.open && (
                                 <motion.div 
