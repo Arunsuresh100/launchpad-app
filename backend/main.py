@@ -1036,17 +1036,48 @@ def ats_check(data: ATSRequest):
         else:
             missing.append(kw)
 
-    # Calculation
-    raw_percentage = (match_count / max(total_weight, 1)) * 100
+    # Calculation - WEIGHTED SET INTERSECTION
+    # We prioritize unique words coverage over phrase perfection.
     
-    # Boost Logic: ATS scores are often harsh. We apply a curve.
-    # 0-30% raw -> 0-50% final
-    # 30-100% raw -> 50-100% final
+    # 1. Unigram Score (Base Coverage)
+    # How many necessary unique words are present?
+    unigram_matches = 0
+    unique_jd_words = set(significant_keywords)
+    # Filter out bigrams from this set, keep only single words
+    unique_jd_unigrams = {w for w in unique_jd_words if ' ' not in w}
     
-    if raw_percentage <= 30:
-        final_score = raw_percentage * 1.6 # Slight boost
+    for w in unique_jd_unigrams:
+        if w in resume_text:
+            unigram_matches += 1
+            
+    # 2. Bigram Score (Context Bonus)
+    # Bigrams are worth double
+    bigram_matches = 0
+    jd_bigrams = {w for w in unique_jd_words if ' ' in w}
+    
+    for w in jd_bigrams:
+        if w in resume_text:
+            bigram_matches += 1
+            
+    if not unique_jd_unigrams and not jd_bigrams:
+         return {"score": 0, "matched_keywords": [], "missing_keywords": []}
+
+    # Weights: Unigrams = 1, Bigrams = 2
+    total_points = len(unique_jd_unigrams) + (len(jd_bigrams) * 2)
+    earned_points = unigram_matches + (bigram_matches * 2)
+    
+    raw_percentage = (earned_points / max(total_points, 1)) * 100
+    
+    # Boost Logic: 
+    # If you cover 50% of the VOCABULARY, you usually have a very strong resume.
+    # Linear scale is often too harsh because JDs have fluff words even after cleaning.
+    # We map 0-50% raw -> 0-75% final
+    # 50-100% raw -> 75-100% final
+    
+    if raw_percentage <= 50:
+        final_score = raw_percentage * 1.5 
     else:
-        final_score = 50 + ((raw_percentage - 30) / 70) * 50
+        final_score = 75 + ((raw_percentage - 50) / 50) * 25
     
     final_score = min(int(final_score), 100)
 
