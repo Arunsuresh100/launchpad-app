@@ -1468,8 +1468,9 @@ frontend_dist = "../frontend/dist"
 def health_check():
     return {"status": "ok", "timestamp": datetime.utcnow()}
 
-if os.path.exists("./uploads"):
-    app.mount("/uploads", StaticFiles(directory="./uploads"), name="uploads")
+if not os.path.exists("./uploads"):
+    os.makedirs("./uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="./uploads"), name="uploads")
 
 if os.path.exists(frontend_dist):
     app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="static")

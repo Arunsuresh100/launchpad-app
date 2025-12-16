@@ -24,7 +24,7 @@ const ATSChecker = () => {
         formData.append('file', file);
         
         // Append User ID for analytics if available
-        const storedUser = localStorage.getItem("user_data");
+        const storedUser = localStorage.getItem("user");
         if (storedUser) {
             try {
                 const parsed = JSON.parse(storedUser);
