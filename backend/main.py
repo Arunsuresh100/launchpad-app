@@ -362,12 +362,11 @@ async def scan_resume(
     except Exception as e:
         print(f"Log Error: {e}")
 
-        return {
-            "filename": file.filename,
-            "extracted_skills": sorted(list(extracted_skills)), 
-            "text_preview": text[:500] 
-        }
-    except Exception as e:
+    return {
+        "filename": file.filename,
+        "extracted_skills": sorted(list(extracted_skills)), 
+        "text_preview": text[:500] 
+    }
         raise HTTPException(status_code=500, detail=str(e))
 
 # --- AUTHENTICATION ---
