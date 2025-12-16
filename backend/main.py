@@ -236,16 +236,15 @@ async def scan_resume(
     
     # Resolve User Name if user_id provided
     user_name = "Candidate"
-    user_email = "Unknown" # Store email too if we can
+    user_email = "Unknown" 
     
     if user_id:
         user = db.query(User).filter(User.id == user_id).first()
         if user:
             user_name = user.full_name
-            # Ideally UserActivity table should have user_email column, but for now we can rely on user_id link
-            # Or formatted in details? "File: ... (User: Name <email>)"
             
     try:
+        print(f"DEBUG: Starting resume scan for {file.filename}")
         contents = await file.read()
 
         
