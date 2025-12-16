@@ -733,12 +733,11 @@ def get_analytics(db: Session = Depends(get_db)):
     graph_data = [{"date": k, "users": v} for k, v in daily_counts.items()]
     
     # --- RESUME FILES TABLE ---
-    # Fetch resume_upload activities
-    resume_logs = db.query(UserActivity).filter(UserActivity.activity_type == "resume_upload").order_by(UserActivity.timestamp.desc()).limit(20).all()
+    # Fetch resume_upload activities (fetching 50 to filter down to valid ones)
+    resume_logs = db.query(UserActivity).filter(UserActivity.activity_type == "resume_upload").order_by(UserActivity.timestamp.desc()).limit(50).all()
     
     resume_details = []
     for log in resume_logs:
-        # details format: "File: abc.pdf" or "File: abc.pdf (Saved: 2023..._abc.pdf)"
         import re
         filename = "Unknown"
         saved_path = None
@@ -747,17 +746,18 @@ def get_analytics(db: Session = Depends(get_db)):
         if match:
              filename = match.group(1)
              saved_path = match.group(2)
-        else:
-             # Old format fallback
-             if log.details and "File: " in log.details:
-                 filename = log.details.replace("File: ", "").strip()
         
-        resume_details.append({
-            "user_name": log.user_name,
-            "filename": filename,
-            "saved_path": saved_path, # If null, view not available (old files)
-            "date": log.timestamp.isoformat() + "Z"
-        })
+        # ONLY show if file was actually saved
+        if saved_path:
+            resume_details.append({
+                "user_name": log.user_name,
+                "filename": filename,
+                "saved_path": saved_path,
+                "date": log.timestamp.isoformat() + "Z"
+            })
+            
+    # Limit to top 20 valid ones
+    resume_details = resume_details[:20]
     
     return {
         "resume_uploads": resume_uploads,
