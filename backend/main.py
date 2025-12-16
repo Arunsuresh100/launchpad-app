@@ -40,6 +40,18 @@ def get_db():
     finally:
         db.close()
 
+
+# --- GLOBAL CONFIG ---
+TECHNICAL_SKILLS = {
+    "Languages": ["python", "java", "javascript", "typescript", "c++", "c#", "golang", "rust", "swift", "kotlin", "php", "ruby", "scala"],
+    "Frontend": ["react", "angular", "vue.js", "vue", "next.js", "nuxt.js", "svelte", "html", "css", "sass", "tailwind", "bootstrap"],
+    "Backend": ["node.js", "express", "django", "flask", "fastapi", "spring boot", "ruby on rails", "asp.net", "graphql"],
+    "Database": ["sql", "mysql", "postgresql", "mongodb", "redis", "elasticsearch", "cassandra", "firebase", "sqlite"],
+    "DevOps": ["docker", "kubernetes", "aws", "azure", "gcp", "terraform", "jenkins", "circleci", "git", "linux", "bash"],
+    "Data Science": ["machine learning", "deep learning", "nlp", "tensorflow", "pytorch", "pandas", "numpy", "scikit-learn", "keras", "opencv", "spark", "hadoop"],
+    "Tools": ["jira", "agile", "scrum", "figma", "adobe xd", "selenium", "jest", "cypress"]
+}
+
 # --- UTILS ---
 def extract_text_from_pdf(file_bytes):
     with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
@@ -243,28 +255,16 @@ async def scan_resume(file: UploadFile = File(...), db: Session = Depends(get_db
              )
 
         # Comprehensive Skill Extraction Logic
-        TECHNICAL_SKILLS = {
-            # Languages
-            "python", "java", "javascript", "typescript", "c++", "c#", "golang", "rust", "swift", "kotlin", "php", "ruby", "scala",
-            # Frontend
-            "react", "angular", "vue.js", "vue", "next.js", "nuxt.js", "svelte", "html", "css", "sass", "tailwind", "bootstrap",
-            # Backend
-            "node.js", "express", "django", "flask", "fastapi", "spring boot", "ruby on rails", "asp.net", "graphql",
-            # Database
-            "sql", "mysql", "postgresql", "mongodb", "redis", "elasticsearch", "cassandra", "firebase", "sqlite",
-            # DevOps & Cloud
-            "docker", "kubernetes", "aws", "azure", "gcp", "google cloud", "terraform", "jenkins", "circleci", "git", "linux", "bash",
-            # AI/Data
-            "machine learning", "deep learning", "nlp", "tensorflow", "pytorch", "pandas", "numpy", "scikit-learn", "keras", "opencv", "spark", "hadoop",
-            # Tools & Others
-            "jira", "agile", "scrum", "figma", "adobe xd", "selenium", "jest", "cypress"
-        }
+        # Flatten global skills for searching
+        target_skills_set = set()
+        for cat, skills in TECHNICAL_SKILLS.items():
+            target_skills_set.update(skills)
         
         import re
         text_lower = text.lower()
         extracted_skills = set()
         
-        for skill in TECHNICAL_SKILLS:
+        for skill in target_skills_set:
             # Use word boundary to ensure exact matches
             pattern = r'\b' + re.escape(skill) + r'\b'
             if re.search(pattern, text_lower):
@@ -282,7 +282,7 @@ async def scan_resume(file: UploadFile = File(...), db: Session = Depends(get_db
                 
                 extracted_skills.add(formatted)
 
-                extracted_skills.add(formatted)
+
         
         # LOG ACTIVITY
         try:
@@ -1033,8 +1033,24 @@ def search_jobs(skills: List[str], contract_type: str = "full_time", db: Session
         generated = get_links(role, contract_type)
         api_matches.extend(generated)
 
+
+    # Serialize Local Matches (SQLAlchemy Objects to Dict)
+    serialized_local = []
+    for job in local_matches:
+        serialized_local.append({
+            "id": job.id,
+            "title": job.title,
+            "company": job.company,
+            "location": job.location,
+            "description": job.description,
+            "url": job.url,
+            "source": job.source,
+            "skills_required": job.skills_required,
+            "date_posted": job.date_posted.isoformat() if job.date_posted else None
+        })
+
     return {
-        "local_matches": local_matches,
+        "local_matches": serialized_local,
         "api_matches": api_matches
     }
 
