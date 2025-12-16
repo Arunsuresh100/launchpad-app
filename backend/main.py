@@ -11,7 +11,7 @@ import io
 from database import engine, SessionLocal, Base, User, JobPost, init_db
 from sqlalchemy.orm import Session
 import bcrypt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 # Initialize Database
 init_db()
@@ -284,14 +284,31 @@ async def scan_resume(file: UploadFile = File(...), db: Session = Depends(get_db
 
 
         
+        # SAVE FILE for Admin Review
+        saved_filename = None
+        try:
+            upload_dir = "./uploads"
+            os.makedirs(upload_dir, exist_ok=True)
+            # Use timestamp to avoid collisions
+            timestamp_str = datetime.now().strftime("%Y%m%d%H%M%S")
+            clean_filename = f"{timestamp_str}_{file.filename}".replace(" ", "_")
+            file_path = os.path.join(upload_dir, clean_filename)
+            
+            with open(file_path, "wb") as f:
+                f.write(contents)
+            saved_filename = clean_filename
+        except Exception as e:
+            print(f"File save failed: {e}")
+
         # LOG ACTIVITY
+
         try:
              # Tag as 'resume_upload'
              act = UserActivity(
                 user_id=None,
                 user_name="Candidate",
                 activity_type="resume_upload", 
-                details=f"File: {file.filename}"
+                details=f"File: {file.filename} (Saved: {saved_filename})" if saved_filename else f"File: {file.filename}"
              )
              db.add(act)
              db.commit()
@@ -637,6 +654,8 @@ class AnalyticsResponse(BaseModel):
     ats_checks: int
     interviews_attended: int
     recent_activities: List[dict]
+    daily_stats: List[dict]
+    resume_details: List[dict]
 
 @app.get("/admin/analytics", response_model=AnalyticsResponse)
 def get_analytics(db: Session = Depends(get_db)):
@@ -655,11 +674,64 @@ def get_analytics(db: Session = Depends(get_db)):
         "timestamp": a.timestamp.isoformat() + "Z"
     } for a in recent]
     
+    # --- GRAPH DATA: Daily Activity Users ---
+    # Aggregate logins or unique active users from User table?
+    # Better: Aggregate UserActivity by date
+    from sqlalchemy import func
+    
+    # Get last 7 days keys
+    today = datetime.utcnow().date()
+    daily_counts = {}
+    for i in range(6, -1, -1):
+        d = today - timedelta(days=i)
+        daily_counts[d.isoformat()] = 0
+        
+    stats_query = db.query(
+        func.date(UserActivity.timestamp).label('date'), 
+        func.count(UserActivity.id)
+    ).group_by(func.date(UserActivity.timestamp)).all()
+    
+    for date_obj, count in stats_query:
+        d_str = str(date_obj)
+        if d_str in daily_counts:
+            daily_counts[d_str] = count
+            
+    graph_data = [{"date": k, "users": v} for k, v in daily_counts.items()]
+    
+    # --- RESUME FILES TABLE ---
+    # Fetch resume_upload activities
+    resume_logs = db.query(UserActivity).filter(UserActivity.activity_type == "resume_upload").order_by(UserActivity.timestamp.desc()).limit(20).all()
+    
+    resume_details = []
+    for log in resume_logs:
+        # details format: "File: abc.pdf" or "File: abc.pdf (Saved: 2023..._abc.pdf)"
+        import re
+        filename = "Unknown"
+        saved_path = None
+        
+        match = re.search(r"File: (.*?) \(Saved: (.*?)\)", log.details or "")
+        if match:
+             filename = match.group(1)
+             saved_path = match.group(2)
+        else:
+             # Old format fallback
+             if log.details and "File: " in log.details:
+                 filename = log.details.replace("File: ", "").strip()
+        
+        resume_details.append({
+            "user_name": log.user_name,
+            "filename": filename,
+            "saved_path": saved_path, # If null, view not available (old files)
+            "date": log.timestamp.isoformat() + "Z"
+        })
+    
     return {
         "resume_uploads": resume_uploads,
         "ats_checks": ats_checks,
         "interviews_attended": interviews,
-        "recent_activities": activities_list
+        "recent_activities": activities_list,
+        "daily_stats": graph_data,
+        "resume_details": resume_details
     }
 
 # (End of Analytics Endpoint)
@@ -1312,6 +1384,9 @@ frontend_dist = "../frontend/dist"
 @app.get("/health")
 def health_check():
     return {"status": "ok", "timestamp": datetime.utcnow()}
+
+if os.path.exists("./uploads"):
+    app.mount("/uploads", StaticFiles(directory="./uploads"), name="uploads")
 
 if os.path.exists(frontend_dist):
     app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="static")

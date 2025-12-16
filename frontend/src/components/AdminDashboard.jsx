@@ -431,104 +431,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                             <StatCard title="Active Jobs" value={jobs.length} icon={<svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>} color="purple" />
                         </div>
 
-                        {/* ANALYTICS TAB CONTENT */}
-                        {activeTab === 'analytics' && analytics && (
-                            <div className="space-y-8">
-                                <h2 className="text-xl font-bold text-white mb-4">Detailed Analytics</h2>
-                                
-                                {/* 3 CIRCLES ROW */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {/* Circle 1: Resume Uploads */}
-                                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
-                                        <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
-                                        <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
-                                            <svg className="w-full h-full transform -rotate-90">
-                                                <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                                <circle className="text-blue-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.resume_uploads, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                            </svg>
-                                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                                                <span className="text-3xl font-bold text-white block">{analytics.resume_uploads}</span>
-                                                <span className="text-[10px] text-slate-400 uppercase tracking-widest">Uploads</span>
-                                            </div>
-                                        </div>
-                                        <p className="text-sm text-slate-400 text-center">Resumes Uploaded (Job Search)</p>
-                                    </div>
 
-                                    {/* Circle 2: ATS Checks */}
-                                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
-                                        <div className="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
-                                        <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
-                                            <svg className="w-full h-full transform -rotate-90">
-                                                <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                                <circle className="text-purple-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.ats_checks, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                            </svg>
-                                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                                                <span className="text-3xl font-bold text-white block">{analytics.ats_checks}</span>
-                                                <span className="text-[10px] text-slate-400 uppercase tracking-widest">Scans</span>
-                                            </div>
-                                        </div>
-                                        <p className="text-sm text-slate-400 text-center">ATS Checks Performed</p>
-                                    </div>
-
-                                    {/* Circle 3: Interviews */}
-                                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
-                                        <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
-                                        <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
-                                            <svg className="w-full h-full transform -rotate-90">
-                                                <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                                <circle className="text-green-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.interviews_attended, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                            </svg>
-                                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                                                <span className="text-3xl font-bold text-white block">{analytics.interviews_attended}</span>
-                                                <span className="text-[10px] text-slate-400 uppercase tracking-widest">Interviews</span>
-                                            </div>
-                                        </div>
-                                        <p className="text-sm text-slate-400 text-center">Mock Interviews Completed</p>
-                                    </div>
-                                </div>
-
-                                {/* RECENT ACTIVITY LIST */}
-                                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-                                    <div className="p-4 md:p-6 border-b border-slate-800 bg-slate-800/30">
-                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                            <span className="animate-pulse w-2 h-2 rounded-full bg-blue-400"></span>
-                                            Recent Live Activity
-                                        </h3>
-                                    </div>
-                                    <div className="divide-y divide-slate-800 max-h-[500px] overflow-y-auto custom-scrollbar">
-                                        {analytics.recent_activities.length > 0 ? (
-                                            analytics.recent_activities.map((act, idx) => (
-                                                <div key={idx} className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 hover:bg-slate-800/20 transition-colors">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shrink-0
-                                                            ${act.type === 'resume_upload' ? 'bg-blue-600/20 text-blue-400' :
-                                                              act.type === 'ats_check' ? 'bg-purple-600/20 text-purple-400' :
-                                                              'bg-green-600/20 text-green-400'}`}
-                                                        >
-                                                            {act.type === 'resume_upload' ? 'UP' : act.type === 'ats_check' ? 'ATS' : 'INT'}
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-sm font-bold text-white">{act.user_name || "Guest User"}</p>
-                                                            <p className="text-xs text-slate-500 capitalize">{act.type.replace('_', ' ')}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex flex-col md:items-end gap-1 w-full md:w-auto pl-14 md:pl-0">
-                                                        <span className="px-2 py-1 bg-slate-800 rounded text-xs text-slate-300 font-mono border border-slate-700">
-                                                            {act.details}
-                                                        </span>
-                                                        <span className="text-[10px] text-slate-600">
-                                                            {formatDate(act.timestamp)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div className="p-8 text-center text-slate-500">No recent activity found.</div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                         <AnimatePresence>
                             {deleteUserModal.open && (
                                 <motion.div 
@@ -655,6 +558,162 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                             </div>
                         </div>
                     </>
+                )}
+                
+                {/* ANALYTICS TAB CONTENT */}
+                {activeTab === 'analytics' && analytics && (
+                    <div className="space-y-8">
+                        <h2 className="text-xl font-bold text-white mb-4">Detailed Analytics</h2>
+                        
+                        {/* 3 CIRCLES ROW */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {/* Circle 1: Resume Uploads */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
+                                <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
+                                    <svg className="w-full h-full transform -rotate-90">
+                                        <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                        <circle className="text-blue-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.resume_uploads, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                    </svg>
+                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                                        <span className="text-3xl font-bold text-white block">{analytics.resume_uploads}</span>
+                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">Uploads</span>
+                                    </div>
+                                </div>
+                                <p className="text-sm text-slate-400 text-center">Resumes Uploaded (Job Search)</p>
+                            </div>
+
+                            {/* Circle 2: ATS Checks */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
+                                <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
+                                    <svg className="w-full h-full transform -rotate-90">
+                                        <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                        <circle className="text-purple-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.ats_checks, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                    </svg>
+                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                                        <span className="text-3xl font-bold text-white block">{analytics.ats_checks}</span>
+                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">Scans</span>
+                                    </div>
+                                </div>
+                                <p className="text-sm text-slate-400 text-center">ATS Checks Performed</p>
+                            </div>
+
+                            {/* Circle 3: Interviews */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
+                                <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
+                                    <svg className="w-full h-full transform -rotate-90">
+                                        <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                        <circle className="text-green-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.interviews_attended, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                    </svg>
+                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                                        <span className="text-3xl font-bold text-white block">{analytics.interviews_attended}</span>
+                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">Interviews</span>
+                                    </div>
+                                </div>
+                                <p className="text-sm text-slate-400 text-center">Mock Interviews Completed</p>
+                            </div>
+                        </div>
+
+
+
+                        {/* DAILY ACTIVITY GRAPH */}
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-6">
+                            <h3 className="text-lg font-bold text-white mb-6">Daily User Activity (Last 7 Days)</h3>
+                            <div className="h-64 flex items-end justify-between gap-2 px-4 pb-4 border-b border-l border-slate-700/50 relative">
+                                {analytics.daily_stats && analytics.daily_stats.length > 0 ? (
+                                    <>
+                                        {/* Y-Axis Guidelines */}
+                                        <div className="absolute inset-0 pointer-events-none flex flex-col justify-between opacity-10">
+                                            {[...Array(5)].map((_, i) => <div key={i} className="w-full h-px bg-white"></div>)}
+                                        </div>
+                                        
+                                        {analytics.daily_stats.map((stat, i) => {
+                                            const maxUsers = Math.max(...analytics.daily_stats.map(s => s.users), 10);
+                                            const heightPerc = (stat.users / maxUsers) * 100;
+                                            return (
+                                                <div key={i} className="flex flex-col items-center gap-2 group w-full">
+                                                    <div className="relative w-full flex justify-center h-full items-end">
+                                                        <div 
+                                                            className="w-full max-w-[40px] bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t-lg transition-all duration-1000 ease-out hover:opacity-80 relative"
+                                                            style={{ height: `${Math.max(heightPerc, 2)}%` }}
+                                                        >
+                                                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                {stat.users}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-[10px] text-slate-500 font-mono rotate-0 whitespace-nowrap">{new Date(stat.date).toLocaleDateString(undefined, {weekday:'short'})}</span>
+                                                </div>
+                                            )
+                                        })}
+                                    </>
+                                ) : (
+                                    <p className="w-full text-center text-slate-500 self-center">No daily data available</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* RESUME UPLOADS TABLE (User Details & Files) */}
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                            <div className="p-4 md:p-6 border-b border-slate-800 bg-slate-800/30 flex justify-between items-center">
+                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                    Resume Uploads & Files
+                                </h3>
+                                <button onClick={fetchData} className="text-xs text-blue-400 hover:text-white transition-colors">Refresh</button>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm text-slate-400">
+                                    <thead className="bg-slate-950 text-slate-200 uppercase text-xs font-bold tracking-wider">
+                                        <tr>
+                                            <th className="px-6 py-4">User Name</th>
+                                            <th className="px-6 py-4">Uploaded File</th>
+                                            <th className="px-6 py-4">Date</th>
+                                            <th className="px-6 py-4 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-800">
+                                        {analytics.resume_details && analytics.resume_details.length > 0 ? (
+                                            analytics.resume_details.map((detail, idx) => (
+                                                <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
+                                                    <td className="px-6 py-4 font-bold text-white">
+                                                        {detail.user_name || "Guest Candidate"}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                                            <span className="text-slate-300">{detail.filename}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-xs font-mono">
+                                                        {formatDate(detail.date)}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        {detail.saved_path ? (
+                                                            <a 
+                                                                href={`/uploads/${detail.saved_path}`} 
+                                                                target="_blank" 
+                                                                rel="noopener noreferrer"
+                                                                className="px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/50 rounded-lg text-xs font-bold transition-all uppercase tracking-wide inline-flex items-center gap-1"
+                                                            >
+                                                                View <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                            </a>
+                                                        ) : (
+                                                            <span className="text-xs text-slate-600 italic">File not saved</span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr><td colSpan="4" className="text-center py-8 text-slate-500">No resumes uploaded recently.</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 )}
                 
                 {activeTab === 'jobs' && (
