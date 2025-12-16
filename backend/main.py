@@ -349,24 +349,24 @@ async def scan_resume(
         except Exception as e:
             print(f"File save failed: {e}")
 
-    # LOG ACTIVITY
-    try:
-        act = UserActivity(
-            user_id=user_id if user_id else None,
-            user_name=user_name,
-            activity_type="resume_upload", 
-            details=f"File: {file.filename} (Saved: {saved_filename})" if saved_filename else f"File: {file.filename}"
-        )
-        db.add(act)
-        db.commit()
-    except Exception as e:
-        print(f"Log Error: {e}")
+        # LOG ACTIVITY
+        try:
+            act = UserActivity(
+                user_id=user_id if user_id else None,
+                user_name=user_name,
+                activity_type="resume_upload", 
+                details=f"File: {file.filename} (Saved: {saved_filename})" if saved_filename else f"File: {file.filename}"
+            )
+            db.add(act)
+            db.commit()
+        except Exception as e:
+            print(f"Log Error: {e}")
 
-    return {
-        "filename": file.filename,
-        "extracted_skills": sorted(list(extracted_skills)), 
-        "text_preview": text[:500] 
-    }
+        return {
+            "filename": file.filename,
+            "extracted_skills": sorted(list(extracted_skills)), 
+            "text_preview": text[:500] 
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
