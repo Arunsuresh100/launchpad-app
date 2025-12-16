@@ -41,8 +41,8 @@ const ATSChecker = () => {
         }
 
         const cleanedJD = jobDescription.trim();
-        if (!cleanedJD || cleanedJD.length < 20) {
-            setError("Job Description is too short or invalid. Please paste a real job description.");
+        if (!cleanedJD || cleanedJD.length < 3) {
+            setError("Please enter a valid Job Title or Description.");
             return;
         }
 

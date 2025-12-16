@@ -433,7 +433,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
 
                         {/* ANALYTICS TAB CONTENT */}
                         {activeTab === 'analytics' && analytics && (
-                            <div className="space-y-8 animate-fade-in-up">
+                            <div className="space-y-8">
                                 <h2 className="text-xl font-bold text-white mb-4">Detailed Analytics</h2>
                                 
                                 {/* 3 CIRCLES ROW */}
