@@ -712,8 +712,11 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                         {analytics.resume_details && analytics.resume_details.length > 0 ? (
                                             analytics.resume_details.map((detail, idx) => (
                                                 <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
-                                                    <td className="px-6 py-4 font-bold text-white">
-                                                        {detail.user_name || "Guest Candidate"}
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-white">{detail.user_name || "Guest Candidate"}</span>
+                                                            <span className="text-xs text-slate-500">{detail.user_email || "No Email"}</span>
+                                                        </div>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2">

@@ -226,13 +226,28 @@ def reset_production_database(db: Session = Depends(get_db)):
 
 
 @app.post("/scan-resume")
-async def scan_resume(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def scan_resume(
+    file: UploadFile = File(...), 
+    user_id: Optional[int] = Form(None),
+    db: Session = Depends(get_db)
+):
     if not file.filename.endswith(('.pdf', '.docx')):
-
         raise HTTPException(status_code=400, detail="Invalid file format. Please upload PDF or DOCX.")
     
+    # Resolve User Name if user_id provided
+    user_name = "Candidate"
+    user_email = "Unknown" # Store email too if we can
+    
+    if user_id:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            user_name = user.full_name
+            # Ideally UserActivity table should have user_email column, but for now we can rely on user_id link
+            # Or formatted in details? "File: ... (User: Name <email>)"
+            
     try:
         contents = await file.read()
+
         
         # Check size (rough check: 5MB limit)
         if len(contents) > 5 * 1024 * 1024:
@@ -335,19 +350,17 @@ async def scan_resume(file: UploadFile = File(...), db: Session = Depends(get_db
             print(f"File save failed: {e}")
 
         # LOG ACTIVITY
-
-        try:
-             # Tag as 'resume_upload'
-             act = UserActivity(
-                user_id=None,
-                user_name="Candidate",
-                activity_type="resume_upload", 
-                details=f"File: {file.filename} (Saved: {saved_filename})" if saved_filename else f"File: {file.filename}"
-             )
-             db.add(act)
-             db.commit()
-        except:
-             pass
+    try:
+        act = UserActivity(
+            user_id=user_id if user_id else None,
+            user_name=user_name,
+            activity_type="resume_upload", 
+            details=f"File: {file.filename} (Saved: {saved_filename})" if saved_filename else f"File: {file.filename}"
+        )
+        db.add(act)
+        db.commit()
+    except Exception as e:
+        print(f"Log Error: {e}")
 
         return {
             "filename": file.filename,
@@ -749,8 +762,16 @@ def get_analytics(db: Session = Depends(get_db)):
         
         # ONLY show if file was actually saved
         if saved_path:
+            # Fetch email if user_id exists
+            user_email = None
+            if log.user_id:
+                u = db.query(User).filter(User.id == log.user_id).first()
+                if u:
+                    user_email = u.email
+            
             resume_details.append({
                 "user_name": log.user_name,
+                "user_email": user_email,
                 "filename": filename,
                 "saved_path": saved_path,
                 "date": log.timestamp.isoformat() + "Z"

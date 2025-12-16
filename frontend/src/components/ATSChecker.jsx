@@ -23,8 +23,25 @@ const ATSChecker = () => {
         const formData = new FormData();
         formData.append('file', file);
         
+        // Append User ID for analytics if available
+        const storedUser = localStorage.getItem("user_data");
+        if (storedUser) {
+            try {
+                const parsed = JSON.parse(storedUser);
+                if (parsed.id) {
+                    formData.append("user_id", parsed.id);
+                }
+            } catch(e) { 
+                console.log("Error parsing user data for ID:", e);
+            }
+        }
+
         try {
-            const response = await axios.post('/scan-resume', formData);
+            const response = await axios.post('http://127.0.0.1:8000/scan-resume', formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
              setResumeText(response.data.text_preview); 
         } catch (err) {
             console.error(err);
