@@ -20,7 +20,14 @@ if DATABASE_URL.startswith("postgres://"):
 engine = create_engine(
     DATABASE_URL, 
     pool_pre_ping=True, 
-    pool_recycle=300
+    pool_recycle=300, # Recycle connections every 5 minutes to avoid stale timeouts
+    zoom_timeout=30, # Optional: Timeout
+    connect_args={
+        "keepalives": 1,
+        "keepalives_idle": 30,
+        "keepalives_interval": 10,
+        "keepalives_count": 5
+    } if "postgresql" in DATABASE_URL else {}
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

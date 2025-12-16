@@ -192,9 +192,22 @@ def reset_database_force():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# --- PRODUCTION RESET TOOL (TEMPORARY) ---
+@app.post("/admin/reset-prod-db")
+def reset_production_database(db: Session = Depends(get_db)):
+    try:
+        rows = db.query(UserActivity).delete()
+        db.commit()
+        return {"status": "success", "message": f"Successfully deleted {rows} activity records from Production DB."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Reset failed: {str(e)}")
+
 @app.post("/scan-resume")
 async def scan_resume(file: UploadFile = File(...), db: Session = Depends(get_db)):
     if not file.filename.endswith(('.pdf', '.docx')):
+
         raise HTTPException(status_code=400, detail="Invalid file format. Please upload PDF or DOCX.")
     
     try:
