@@ -971,40 +971,46 @@ class ATSRequest(BaseModel):
 @app.post("/ats_check")
 def ats_check(data: ATSRequest):
     import re
-    # 1. Robust Stop Words
+    # 1. Robust Stop Words (Removed key tech terms like 'design', 'development')
     stop_words = {
         'and', 'the', 'is', 'in', 'to', 'for', 'with', 'a', 'an', 'of', 'on', 'at', 'by', 'from',
         'about', 'as', 'into', 'like', 'through', 'after', 'over', 'between', 'out', 'against',
         'during', 'without', 'before', 'under', 'around', 'among', 'can', 'will', 'just', 'don',
-        'should', 'now', 'that', 'this', 'what', 'which', 'who', 'whom', 'experience', 'work',
-        'years', 'knowledge', 'skills', 'ability', 'strong', 'proficiency', 'understanding',
-        'excellent', 'working', 'proven', 'track', 'record', 'degree', 'preferred', 'plus',
+        'should', 'now', 'that', 'this', 'what', 'which', 'who', 'whom', 
+        'years', 'proven', 'track', 'record', 'degree', 'preferred', 'plus',
         'responsibilities', 'qualifications', 'requirements', 'must', 'have', 'be', 'able',
-        'good', 'communication', 'team', 'environment', 'flexible', 'role', 'candidate',
-        'looking', 'seeking', 'opportunity', 'company', 'business', 'support', 'ensure',
-        'help', 'provide', 'using', 'best', 'practices', 'development', 'design', 'implementation',
+        'looking', 'seeking', 'opportunity', 'company', 'ensure',
+        'help', 'provide', 'using', 'best', 'practices', 
         'including', 'various', 'across', 'within', 'related', 'however', 'although', 'such', 'other'
     }
 
     def clean_text(text):
-        # Keep only alphanumeric and spaces, lowercase
-        return re.sub(r'[^a-z0-9\s]', '', text.lower())
+        # Keep alphanumeric, spaces, and tech symbols . + # -
+        # Escape special chars in regex
+        return re.sub(r'[^a-z0-9\s\.\+\#\-]', '', text.lower())
 
     jd_text = clean_text(data.job_description)
     resume_text = clean_text(data.resume_text)
 
     jd_words = jd_text.split()
     
-    # Extract Significant Keywords (Frequency > 0, filtering stop words)
+    # Extract Significant Keywords
     significant_keywords = set()
     for w in jd_words:
-        if len(w) > 3 and w not in stop_words:
-            significant_keywords.add(w)
+        # Filter purely generic short words or stop words
+        # Strip trailing punctuation from word if any logic remains (but regex above cleaned mostly)
+        w_clean = w.strip('.-') # Trim leading/trailing dots/dashes
+        if len(w_clean) > 2 and w_clean not in stop_words:
+            significant_keywords.add(w_clean)
 
-    # 2-gram extraction for JD (basic context)
+    # 2-gram extraction for JD
+    # We allow bigrams if they aren't purely stop words
     for i in range(len(jd_words) - 1):
-        w1 = jd_words[i]
-        w2 = jd_words[i+1]
+        w1 = jd_words[i].strip('.-')
+        w2 = jd_words[i+1].strip('.-')
+        
+        # Valid bigram if both are not stop words (stricter for bigrams to avoid "and the")
+        # But we want "web development" (web=good, development=was_stop_now_good)
         if w1 not in stop_words and w2 not in stop_words and len(w1) > 2 and len(w2) > 2:
              gram = f"{w1} {w2}"
              significant_keywords.add(gram)
@@ -1021,6 +1027,9 @@ def ats_check(data: ATSRequest):
     
     for kw in significant_keywords:
         # Check if the keyword/phrase exists in the full resume text
+        # Use regex search for whole word boundaries? 
+        # Text cleaning might have merged things. 
+        # Simple substring check is robust for "c++" in "experience with c++"
         if kw in resume_text: 
             matched.append(kw)
             match_count += 1
@@ -1031,14 +1040,13 @@ def ats_check(data: ATSRequest):
     raw_percentage = (match_count / max(total_weight, 1)) * 100
     
     # Boost Logic: ATS scores are often harsh. We apply a curve.
-    # If you match 30% of distinct keywords, that's actually decent for a human resume vs JD.
-    # We map 0-40% raw -> 0-60% final
-    # 40-100% raw -> 60-100% final
+    # 0-30% raw -> 0-50% final
+    # 30-100% raw -> 50-100% final
     
-    if raw_percentage <= 40:
-        final_score = raw_percentage * 1.5
+    if raw_percentage <= 30:
+        final_score = raw_percentage * 1.6 # Slight boost
     else:
-        final_score = 60 + ((raw_percentage - 40) / 60) * 40
+        final_score = 50 + ((raw_percentage - 30) / 70) * 50
     
     final_score = min(int(final_score), 100)
 

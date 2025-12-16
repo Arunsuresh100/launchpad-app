@@ -165,7 +165,7 @@ const ATSChecker = () => {
                             <textarea 
                                 className="relative w-full h-full min-h-[180px] md:min-h-[300px] bg-transparent rounded-2xl p-4 md:p-6 text-sm md:text-base text-slate-200 
                                     focus:outline-none resize-none placeholder-slate-600 custom-scrollbar leading-relaxed font-mono z-10"
-                                placeholder="// Paste JD..."
+                                placeholder="Paste the full Job Description here. Include responsibilities, requirements, and qualifications to get the best ATS score analysis."
                                 value={jobDescription}
                                 onChange={(e) => {
                                     setJobDescription(e.target.value);
