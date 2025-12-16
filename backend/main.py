@@ -181,7 +181,7 @@ def reset_database_force():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/scan-resume")
-async def scan_resume(file: UploadFile = File(...)):
+async def scan_resume(file: UploadFile = File(...), db: Session = Depends(get_db)):
     if not file.filename.endswith(('.pdf', '.docx')):
         raise HTTPException(status_code=400, detail="Invalid file format. Please upload PDF or DOCX.")
     
@@ -281,6 +281,22 @@ async def scan_resume(file: UploadFile = File(...)):
                 if formatted.lower() == "node.js": formatted = "Node.js"
                 
                 extracted_skills.add(formatted)
+
+                extracted_skills.add(formatted)
+        
+        # LOG ACTIVITY
+        try:
+             # Tag as 'resume_upload'
+             act = UserActivity(
+                user_id=None,
+                user_name="Candidate",
+                activity_type="resume_upload", 
+                details=f"File: {file.filename}"
+             )
+             db.add(act)
+             db.commit()
+        except:
+             pass
 
         return {
             "filename": file.filename,
