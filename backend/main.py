@@ -971,125 +971,99 @@ class ATSRequest(BaseModel):
 @app.post("/ats_check")
 def ats_check(data: ATSRequest):
     import re
-    # 1. Robust Stop Words (Removed key tech terms like 'design', 'development')
-    stop_words = {
-        'and', 'the', 'is', 'in', 'to', 'for', 'with', 'a', 'an', 'of', 'on', 'at', 'by', 'from',
-        'about', 'as', 'into', 'like', 'through', 'after', 'over', 'between', 'out', 'against',
-        'during', 'without', 'before', 'under', 'around', 'among', 'can', 'will', 'just', 'don',
-        'should', 'now', 'that', 'this', 'what', 'which', 'who', 'whom', 
-        'years', 'proven', 'track', 'record', 'degree', 'preferred', 'plus',
-        'responsibilities', 'qualifications', 'requirements', 'must', 'have', 'be', 'able',
-        'looking', 'seeking', 'opportunity', 'company', 'ensure',
-        'help', 'provide', 'using', 'best', 'practices', 
-        'including', 'various', 'across', 'within', 'related', 'however', 'although', 'such', 'other'
-    }
-
-    def clean_text(text):
-        # Keep alphanumeric, spaces, and tech symbols . + # -
-        # Escape special chars in regex
-        return re.sub(r'[^a-z0-9\s\.\+\#\-]', '', text.lower())
-
-    jd_text = clean_text(data.job_description)
-    resume_text = clean_text(data.resume_text)
-
-    jd_words = jd_text.split()
+    from sklearn.feature_extraction.text import CountVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
     
-    # Extract Significant Keywords
-    significant_keywords = set()
-    for w in jd_words:
-        # Filter purely generic short words or stop words
-        # Strip trailing punctuation from word if any logic remains (but regex above cleaned mostly)
-        w_clean = w.strip('.-') # Trim leading/trailing dots/dashes
-        if len(w_clean) > 2 and w_clean not in stop_words:
-            significant_keywords.add(w_clean)
+    # Clean text function (keep structure but normalize)
+    def clean_text_v2(text):
+        text = text.lower()
+        # Remove special chars but keep vital tech symbols (e.g., c++, node.js)
+        # We replace non-tech punctuation with space
+        text = re.sub(r'[^a-z0-9\s\+\#\.]', ' ', text)
+        # Collapse multiple spaces
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
 
-    # 2-gram extraction for JD
-    # We allow bigrams if they aren't purely stop words
-    for i in range(len(jd_words) - 1):
-        w1 = jd_words[i].strip('.-')
-        w2 = jd_words[i+1].strip('.-')
+    clean_jd = clean_text_v2(data.job_description)
+    clean_resume = clean_text_v2(data.resume_text)
+    
+    if not clean_jd or not clean_resume:
+         return {"score": 0, "matched_keywords": [], "missing_keywords": ["Content empty or unreadable"]}
+    
+    # We want to match unigrams (1 word) and bigrams (2 words), e.g., "machine learning"
+    # standard 'english' stop_words remove 'and', 'the', etc.
+    try:
+        vectorizer = CountVectorizer(ngram_range=(1, 3), stop_words='english')
         
-        # Valid bigram if both are not stop words (stricter for bigrams to avoid "and the")
-        # But we want "web development" (web=good, development=was_stop_now_good)
-        if w1 not in stop_words and w2 not in stop_words and len(w1) > 2 and len(w2) > 2:
-             gram = f"{w1} {w2}"
-             significant_keywords.add(gram)
+        # Fit on both documents to build common vocabulary
+        tfidf_matrix = vectorizer.fit_transform([clean_jd, clean_resume])
+        
+        # Calculate Cosine Similarity
+        # Matrix is 2xN. Row 0 = JD, Row 1 = Resume.
+        similarity_matrix = cosine_similarity(tfidf_matrix)
+        raw_similarity = similarity_matrix[0][1] # Value between 0 and 1
+        
+        # ATS Similarity ranges are typically lower than 1.0 (1.0 = identical text)
+        # A good resume usually hits 0.4 - 0.6 similarity against a JD.
+    except ValueError:
+         # Happens if vocab is empty (no valid words found) or stop words ate everything
+         return {"score": 0, "matched_keywords": [], "missing_keywords": ["No keywords found internally"]}
 
-    if not significant_keywords:
-        return {"score": 0, "matched_keywords": [], "missing_keywords": []}
-
-    matched = []
-    missing = []
-
-    # Scoring Logic
-    match_count = 0
-    total_weight = len(significant_keywords)
     
-    for kw in significant_keywords:
-        # Check if the keyword/phrase exists in the full resume text
-        # Use regex search for whole word boundaries? 
-        # Text cleaning might have merged things. 
-        # Simple substring check is robust for "c++" in "experience with c++"
-        if kw in resume_text: 
-            matched.append(kw)
-            match_count += 1
-        else:
-            missing.append(kw)
-
-    # Calculation - WEIGHTED SET INTERSECTION
-    # We prioritize unique words coverage over phrase perfection.
+    # Mapping Logic
+    # Target: 0.5 similarity -> ~85 score (Excellent)
+    # Target: 0.1 similarity -> ~30 score (Poor)
     
-    # 1. Unigram Score (Base Coverage)
-    # How many necessary unique words are present?
-    unigram_matches = 0
-    unique_jd_words = set(significant_keywords)
-    # Filter out bigrams from this set, keep only single words
-    unique_jd_unigrams = {w for w in unique_jd_words if ' ' not in w}
-    
-    for w in unique_jd_unigrams:
-        if w in resume_text:
-            unigram_matches += 1
-            
-    # 2. Bigram Score (Context Bonus)
-    # Bigrams are worth double
-    bigram_matches = 0
-    jd_bigrams = {w for w in unique_jd_words if ' ' in w}
-    
-    for w in jd_bigrams:
-        if w in resume_text:
-            bigram_matches += 1
-            
-    if not unique_jd_unigrams and not jd_bigrams:
-         return {"score": 0, "matched_keywords": [], "missing_keywords": []}
-
-    # Weights: Unigrams = 1, Bigrams = 2
-    total_points = len(unique_jd_unigrams) + (len(jd_bigrams) * 2)
-    earned_points = unigram_matches + (bigram_matches * 2)
-    
-    raw_percentage = (earned_points / max(total_points, 1)) * 100
-    
-    # Boost Logic: 
-    # If you cover 50% of the VOCABULARY, you usually have a very strong resume.
-    # Linear scale is often too harsh because JDs have fluff words even after cleaning.
-    # We map 0-50% raw -> 0-75% final
-    # 50-100% raw -> 75-100% final
-    
-    if raw_percentage <= 50:
-        final_score = raw_percentage * 1.5 
+    base_score = 0
+    if raw_similarity > 0.6:
+        base_score = 100
+    elif raw_similarity < 0.05:
+        base_score = 10
     else:
-        final_score = 75 + ((raw_percentage - 50) / 50) * 25
+        # Curve: Linear mapping from 0.05..0.6 to 10..100
+        # Range Sim: 0.55
+        # Range Score: 90
+        # Slope = 90 / 0.55 = ~163.6
+        base_score = 10 + (raw_similarity - 0.05) * 163.6
+        
+    final_score = int(min(max(base_score, 0), 100))
     
-    final_score = min(int(final_score), 100)
-
-    # Sort keywords by length (longer phrases usually more interesting)
-    matched.sort(key=len, reverse=True)
-    missing.sort(key=len, reverse=True)
+    # EXTRACT MISSING KEYWORDS
+    # Get feature names (words/phrases)
+    feature_names = vectorizer.get_feature_names_out()
+    
+    # Get vectors as arrays
+    jd_vector = tfidf_matrix[0].toarray()[0]
+    res_vector = tfidf_matrix[1].toarray()[0]
+    
+    missing_phrases = []
+    matched_phrases = []
+    
+    # Iterate through all vocab features
+    for i, phrase in enumerate(feature_names):
+        in_jd = jd_vector[i] > 0
+        in_res = res_vector[i] > 0
+        
+        # Rule: We care about features in JD
+        if in_jd:
+            if in_res:
+                matched_phrases.append(phrase)
+            else:
+                # Missing
+                # Filter out purely numeric or very short junk features if any slipped through
+                if len(phrase) > 3 and not phrase.isdigit():
+                    missing_phrases.append(phrase)
+    
+    # Sort by length (longer = more specific/contextual usually)
+    missing_phrases.sort(key=len, reverse=True)
+    matched_phrases.sort(key=len, reverse=True)
 
     return {
         "score": final_score,
-        "matched_keywords": matched[:20], # Top 20
-        "missing_keywords": missing[:20]  # Top 20
-    }
+        "matched_keywords": matched_phrases[:25], # increased limit
+        "missing_keywords": missing_phrases[:20]
+    } # Top 20
+    
 
 class InterviewEval(BaseModel):
     transcript: List[dict] # [{question: str, answer: str}]
