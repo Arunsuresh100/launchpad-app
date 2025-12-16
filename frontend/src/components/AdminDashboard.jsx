@@ -8,7 +8,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
     const [users, setUsers] = useState([]);
     const [deletedUsers, setDeletedUsers] = useState([]); 
     const [jobs, setJobs] = useState([]);
-    const [analytics, setAnalytics] = useState(null); // New Analytics State
+    const [analytics, setAnalytics] = useState({ resume_uploads: 0, ats_checks: 0, interviews_attended: 0, recent_activities: [] }); // Default State
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
     const [notification, setNotification] = useState('');

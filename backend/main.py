@@ -1118,20 +1118,22 @@ def ats_check(data: ATSRequest, db: Session = Depends(get_db)):
 
     
     # Mapping Logic
-    # Target: 0.5 similarity -> ~85 score (Excellent)
-    # Target: 0.1 similarity -> ~30 score (Poor)
+    # New generous curve:
+    # 0.1 sim -> ~35-40 score
+    # 0.3 sim -> ~70-75 score
+    # 0.5 sim -> ~95-100 score
     
-    base_score = 0
-    if raw_similarity > 0.6:
+    if raw_similarity > 0.55:
         base_score = 100
-    elif raw_similarity < 0.05:
+    elif raw_similarity < 0.02:
         base_score = 10
     else:
-        # Curve: Linear mapping from 0.05..0.6 to 10..100
-        # Range Sim: 0.55
-        # Range Score: 90
-        # Slope = 90 / 0.55 = ~163.6
-        base_score = 10 + (raw_similarity - 0.05) * 163.6
+        # Linear boost: Score = 20 + similarity * 150
+        # e.g. 0.3 * 150 = 45 + 20 = 65. Still a bit low?
+        # Let's try: Score = 25 + similarity * 140
+        # 0.4 * 140 = 56 + 25 = 81. Good.
+        # 0.2 * 140 = 28 + 25 = 53.
+        base_score = 25 + (raw_similarity * 140)
         
     final_score = int(min(max(base_score, 0), 100))
     
