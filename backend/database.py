@@ -21,7 +21,6 @@ engine = create_engine(
     DATABASE_URL, 
     pool_pre_ping=True, 
     pool_recycle=300, # Recycle connections every 5 minutes to avoid stale timeouts
-    zoom_timeout=30, # Optional: Timeout
     connect_args={
         "keepalives": 1,
         "keepalives_idle": 30,
