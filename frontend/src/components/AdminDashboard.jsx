@@ -565,54 +565,72 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                     <div className="space-y-8">
                         <h2 className="text-xl font-bold text-white mb-4">Detailed Analytics</h2>
                         
-                        {/* 3 CIRCLES ROW */}
+                        {/* 3 METRIC CARDS (Replaces Circles) */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {/* Circle 1: Resume Uploads */}
-                            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
-                                <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
-                                    <svg className="w-full h-full transform -rotate-90">
-                                        <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                        <circle className="text-blue-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.resume_uploads, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                    </svg>
-                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                                        <span className="text-3xl font-bold text-white block">{analytics.resume_uploads}</span>
-                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">Uploads</span>
+                            {/* Card 1: Resume Uploads */}
+                            <div className="group bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-2xl p-6 relative overflow-hidden transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/10 hover:border-blue-500/30">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <svg className="w-24 h-24 text-blue-500 transform rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                                </div>
+                                <div className="relative z-10 flex flex-col h-full justify-between">
+                                    <div className="mb-4">
+                                        <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform text-blue-400">
+                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                        </div>
+                                        <h3 className="text-slate-400 text-sm font-medium uppercase tracking-wider">Total Uploads</h3>
+                                    </div>
+                                    <div>
+                                        <span className="text-4xl font-bold text-white tracking-tight block group-hover:text-blue-400 transition-colors">
+                                            {analytics.resume_uploads}
+                                        </span>
+                                        <p className="text-xs text-slate-500 mt-1">Resumes processed for jobs</p>
                                     </div>
                                 </div>
-                                <p className="text-sm text-slate-400 text-center">Resumes Uploaded (Job Search)</p>
+                                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-blue-600 to-transparent w-full opacity-50"></div>
                             </div>
 
-                            {/* Circle 2: ATS Checks */}
-                            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
-                                <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
-                                    <svg className="w-full h-full transform -rotate-90">
-                                        <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                        <circle className="text-purple-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.ats_checks, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                    </svg>
-                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                                        <span className="text-3xl font-bold text-white block">{analytics.ats_checks}</span>
-                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">Scans</span>
+                            {/* Card 2: ATS Checks */}
+                            <div className="group bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-2xl p-6 relative overflow-hidden transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-purple-500/10 hover:border-purple-500/30">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <svg className="w-24 h-24 text-purple-500 transform -rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                                </div>
+                                <div className="relative z-10 flex flex-col h-full justify-between">
+                                    <div className="mb-4">
+                                        <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform text-purple-400">
+                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                        </div>
+                                        <h3 className="text-slate-400 text-sm font-medium uppercase tracking-wider">ATS Scans</h3>
+                                    </div>
+                                    <div>
+                                        <span className="text-4xl font-bold text-white tracking-tight block group-hover:text-purple-400 transition-colors">
+                                            {analytics.ats_checks}
+                                        </span>
+                                        <p className="text-xs text-slate-500 mt-1">Smarter resume optimizations</p>
                                     </div>
                                 </div>
-                                <p className="text-sm text-slate-400 text-center">ATS Checks Performed</p>
+                                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-purple-600 to-transparent w-full opacity-50"></div>
                             </div>
 
-                            {/* Circle 3: Interviews */}
-                            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
-                                <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
-                                    <svg className="w-full h-full transform -rotate-90">
-                                        <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                        <circle className="text-green-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.interviews_attended, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                    </svg>
-                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                                        <span className="text-3xl font-bold text-white block">{analytics.interviews_attended}</span>
-                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">Interviews</span>
+                            {/* Card 3: Interviews */}
+                            <div className="group bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-2xl p-6 relative overflow-hidden transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-green-500/10 hover:border-green-500/30">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <svg className="w-24 h-24 text-green-500 transform rotate-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                                </div>
+                                <div className="relative z-10 flex flex-col h-full justify-between">
+                                    <div className="mb-4">
+                                        <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform text-green-400">
+                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
+                                        </div>
+                                        <h3 className="text-slate-400 text-sm font-medium uppercase tracking-wider">Interviews</h3>
+                                    </div>
+                                    <div>
+                                        <span className="text-4xl font-bold text-white tracking-tight block group-hover:text-green-400 transition-colors">
+                                            {analytics.interviews_attended}
+                                        </span>
+                                        <p className="text-xs text-slate-500 mt-1">Confidence building sessions</p>
                                     </div>
                                 </div>
-                                <p className="text-sm text-slate-400 text-center">Mock Interviews Completed</p>
+                                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-green-600 to-transparent w-full opacity-50"></div>
                             </div>
                         </div>
 
@@ -632,77 +650,126 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                             </div>
                             
                             <div className="h-64 relative w-full">
-                                {analytics.daily_stats && analytics.daily_stats.length > 0 ? (
-                                    (() => {
-                                        const data = analytics.daily_stats;
-                                        const values = data.map(d => d.users);
-                                        const maxVal = Math.max(...values, 5); // Minimum chart scale of 5
-                                        const points = values.map((val, i) => {
-                                            const x = (i / (values.length - 1)) * 100;
-                                            const y = 100 - (val / maxVal) * 80; // Leave 20% breathing room at top, 0 at bottom
-                                            return `${x},${y}`;
-                                        }).join(' ');
+                                {analytics.daily_stats && analytics.daily_stats.length > 0 && analytics.daily_stats.some(s => s.users > 0) ? (
+                                     (() => {
+                                         const data = analytics.daily_stats;
+                                         const values = data.map(d => d.users);
+                                         const maxVal = Math.max(...values, 5); // Minimum chart scale of 5
+                                         
+                                         // Generate Smooth Bezier Curve Path
+                                         // Helper to get coordinates
+                                         const getCoord = (val, i) => {
+                                             const x = (i / (values.length - 1)) * 100;
+                                             const y = 100 - (val / maxVal) * 80;
+                                             return {x, y};
+                                         };
 
-                                        // Create fill area path
-                                        const fillPath = `0,100 ${points} 100,100`;
-                                        
-                                        return (
-                                            <div className="w-full h-full relative cursor-crosshair">
-                                                {/* Grid Lines */}
-                                                <div className="absolute inset-0 flex flex-col justify-between opacity-10 pointer-events-none">
-                                                    {[...Array(5)].map((_, i) => (
-                                                        <div key={i} className="w-full border-b border-white text-[10px] text-white pl-1">
-                                                            {Math.round(maxVal - (i * (maxVal/4)))}
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                         let pathD = "";
+                                         const points = values.map((val, i) => getCoord(val, i));
 
-                                                <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
-                                                    <defs>
-                                                        <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
-                                                            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5"/>
-                                                            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0"/>
-                                                        </linearGradient>
-                                                    </defs>
-                                                    {/* Area Fill */}
-                                                    <polygon points={fillPath} fill="url(#chartGradient)" />
-                                                    {/* Line Stroke */}
-                                                    <polyline points={points} fill="none" stroke="#3b82f6" strokeWidth="3" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" />
-                                                    
-                                                    {/* Data Points */}
-                                                    {data.map((stat, i) => {
-                                                        const x = (i / (values.length - 1)) * 100;
-                                                        const y = 100 - (stat.users / maxVal) * 80;
-                                                        return (
-                                                            <g key={i} className="group/point">
-                                                                <circle cx={x} cy={y} r="2" className="fill-blue-500 stroke-slate-900 stroke-2 hover:r-4 transition-all duration-300 pointer-events-auto" vectorEffect="non-scaling-stroke" />
-                                                                {/* Tooltip */}
-                                                                <foreignObject x={x - 10} y={y - 25} width="20" height="20" className="overflow-visible pointer-events-none opacity-0 group-hover/point:opacity-100 transition-opacity">
-                                                                     <div className="bg-slate-800 text-white text-[10px] font-bold py-1 px-2 rounded -translate-x-1/2 whitespace-nowrap border border-slate-700 shadow-xl flex flex-col items-center">
-                                                                        <span>{stat.users} Users</span>
-                                                                        <span className="text-[8px] text-slate-400">{new Date(stat.date).toLocaleDateString(undefined, {weekday: 'short', day:'numeric'})}</span>
-                                                                     </div>
-                                                                </foreignObject>
-                                                            </g>
-                                                        )
-                                                    })}
-                                                </svg>
+                                         // Move to start
+                                         pathD += `M ${points[0].x},${points[0].y}`;
 
-                                                {/* X-Axis Labels */}
-                                                <div className="absolute top-full left-0 w-full flex justify-between mt-2 px-1">
-                                                     {data.map((stat, i) => (
-                                                        <span key={i} className="text-[10px] text-slate-500 font-mono text-center w-8">
-                                                            {new Date(stat.date).toLocaleDateString(undefined, {weekday:'short'})}
-                                                        </span>
+                                         // Curve through remaining points
+                                         for(let i = 0; i < points.length - 1; i++){
+                                             const p0 = points[i];
+                                             const p1 = points[i+1];
+                                             
+                                             // Control points for smooth curve (X mid, Y flat)
+                                             const cp1x = p0.x + (p1.x - p0.x) / 2;
+                                             const cp1y = p0.y;
+                                             const cp2x = p0.x + (p1.x - p0.x) / 2;
+                                             const cp2y = p1.y;
+                                             
+                                             pathD += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p1.x},${p1.y}`;
+                                         }
+                                         
+                                         const linePath = pathD; 
+                                         // Close area for fill
+                                         const areaPath = `${pathD} L 100,100 L 0,100 Z`;
+
+                                         return (
+                                             <div className="w-full h-full relative cursor-crosshair group/chart">
+                                                 {/* Grid Lines */}
+                                                 <div className="absolute inset-0 flex flex-col justify-between opacity-10 pointer-events-none">
+                                                     {[...Array(5)].map((_, i) => (
+                                                         <div key={i} className="w-full border-b border-white text-[10px] text-white pl-1">
+                                                             {Math.round(maxVal - (i * (maxVal/4)))}
+                                                         </div>
                                                      ))}
-                                                </div>
-                                            </div>
-                                        );
+                                                 </div>
+
+                                                 <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                                     <defs>
+                                                         <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+                                                             <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6"/>
+                                                             <stop offset="100%" stopColor="#3b82f6" stopOpacity="0"/>
+                                                         </linearGradient>
+                                                         <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                                             <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                                                             <feMerge>
+                                                                 <feMergeNode in="coloredBlur"/>
+                                                                 <feMergeNode in="SourceGraphic"/>
+                                                             </feMerge>
+                                                         </filter>
+                                                     </defs>
+                                                     
+                                                     {/* Area Fill */}
+                                                     <path d={areaPath} fill="url(#chartGradient)" />
+                                                     
+                                                     {/* Line Stroke with Glow */}
+                                                     <path d={linePath} fill="none" stroke="#60a5fa" strokeWidth="3" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" filter="url(#glow)" />
+                                                     
+                                                     {/* Interactive Data Points */}
+                                                     {points.map((p, i) => {
+                                                         const stat = data[i];
+                                                         return (
+                                                             <g key={i} className="group/point">
+                                                                 {/* Invisible hit target for easier hover */}
+                                                                 <circle cx={p.x} cy={p.y} r="6" fill="transparent" stroke="none" vectorEffect="non-scaling-stroke" className="pointer-events-auto cursor-pointer" />
+                                                                 
+                                                                 {/* Visible Dot */}
+                                                                 <circle cx={p.x} cy={p.y} r="3" className="fill-slate-900 stroke-blue-400 stroke-2 group-hover/point:fill-blue-400 group-hover/point:scale-150 transition-all duration-200 pointer-events-none" vectorEffect="non-scaling-stroke" />
+                                                                 
+                                                                 {/* Tooltip */}
+                                                                 <foreignObject x={p.x - 15} y={p.y - 45} width="30" height="40" className="overflow-visible pointer-events-none opacity-0 group-hover/point:opacity-100 transition-all duration-200 transform translate-y-2 group-hover/point:translate-y-0 z-50">
+                                                                      <div className="bg-slate-800/90 backdrop-blur-md text-white py-2 px-3 rounded-lg border border-slate-600/50 shadow-2xl flex flex-col items-center min-w-[80px] -translate-x-[25%] relative">
+                                                                         <span className="text-lg font-bold text-blue-400 leading-none">{stat.users}</span>
+                                                                         <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider mt-1 whitespace-nowrap">
+                                                                             {new Date(stat.date).toLocaleDateString(undefined, {weekday: 'short'})}
+                                                                         </span>
+                                                                         {/* Arrow */}
+                                                                         <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45 border-r border-b border-slate-600/50"></div>
+                                                                      </div>
+                                                                 </foreignObject>
+                                                                 
+                                                                 {/* Vertical Guide Line on Hover */}
+                                                                 <line x1={p.x} y1={p.y} x2={p.x} y2="100" stroke="white" strokeWidth="1" strokeDasharray="2,2" vectorEffect="non-scaling-stroke" className="opacity-0 group-hover/point:opacity-20 transition-opacity" />
+                                                             </g>
+                                                         )
+                                                     })}
+                                                 </svg>
+
+                                                 {/* X-Axis Labels */}
+                                                 <div className="absolute top-full left-0 w-full flex justify-between mt-3 px-1">
+                                                      {data.map((stat, i) => (
+                                                         <span key={i} className="text-[10px] text-slate-500 font-mono text-center w-8 group-hover/chart:text-slate-400 transition-colors">
+                                                             {new Date(stat.date).toLocaleDateString(undefined, {weekday:'short'})}
+                                                         </span>
+                                                      ))}
+                                                 </div>
+                                             </div>
+                                         );
                                     })()
                                 ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-2">
-                                        <svg className="w-8 h-8 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
-                                        <p>No activity data yet</p>
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-3 border-2 border-dashed border-slate-800/50 rounded-xl bg-slate-900/50">
+                                        <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center">
+                                            <svg className="w-8 h-8 opacity-40 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-sm font-medium text-slate-400">No Data Available</p>
+                                            <p className="text-xs text-slate-600 mt-1">Activity will appear here once users start interacting.</p>
+                                        </div>
                                     </div>
                                 )}
                             </div>
