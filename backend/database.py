@@ -75,6 +75,16 @@ class Message(Base):
     is_replied = Column(Boolean, default=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
+class UserActivity(Base):
+    __tablename__ = "user_activities"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=True) # Start tracking even for anonymous if needed (but usually logged in)
+    user_name = Column(String, default="Anonymous")
+    activity_type = Column(String) # 'resume_upload', 'ats_check', 'interview_attempt'
+    details = Column(String) # Filename or outcome
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
 import bcrypt
 
 def init_db():
@@ -91,6 +101,10 @@ def init_db():
                 print("MIGRATION: Adding deletion_reason column...")
                 conn.execute(text("ALTER TABLE users ADD COLUMN deletion_reason VARCHAR"))
             conn.commit()
+
+        # Check for UserActivity table creation (done by create_all usually, but if DB exists, new tables might be missed in some older setups, though create_all handles missing tables)
+        # However, create_all does NOT update existing tables (adding columns), hence the manual migration above.
+        # But create_all WILL create new tables like user_activities.
     except Exception as e:
         print(f"Migration Check Failed (Ignore if first run): {e}")
 
