@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ResumeUpload = () => {
     const [file, setFile] = useState(null);
@@ -216,35 +217,50 @@ const ResumeUpload = () => {
                                     <p>Curating the best jobs for you...</p>
                                 </div>
                             ) : jobs ? (
-                                <div className="space-y-4">
-                                    {[...jobs.local_matches, ...jobs.api_matches].length === 0 ? (
-                                         <div className="text-center text-gray-500 py-12">No matching jobs found. Try refreshing or updating skills.</div>
-                                    ) : (
-                                        [...jobs.local_matches, ...jobs.api_matches].map((job, i) => (
-                                            <div key={job.id || i} className="bg-gray-800/50 p-5 rounded-xl border border-gray-700/50 hover:border-green-500/50 hover:bg-gray-800 transition-all group">
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <h5 className="font-bold text-white text-lg group-hover:text-green-400 transition-colors">{job.title}</h5>
-                                                        <p className="text-blue-400 text-sm mb-2">{job.company}</p>
+                                <motion.div layout className="space-y-4 min-h-[300px]">
+                                    <AnimatePresence mode="popLayout">
+                                        {[...jobs.local_matches, ...jobs.api_matches].length === 0 ? (
+                                             <motion.div 
+                                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                                className="text-center text-gray-500 py-12"
+                                             >
+                                                No matching jobs found. Try refreshing or updating skills.
+                                             </motion.div>
+                                        ) : (
+                                            [...jobs.local_matches, ...jobs.api_matches].map((job, i) => (
+                                                <motion.div 
+                                                    layout
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, scale: 0.95 }}
+                                                    transition={{ duration: 0.2 }}
+                                                    key={job.id || i} 
+                                                    className="bg-gray-800/50 p-5 rounded-xl border border-gray-700/50 hover:border-green-500/50 hover:bg-gray-800 transition-colors group"
+                                                >
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <h5 className="font-bold text-white text-lg group-hover:text-green-400 transition-colors">{job.title}</h5>
+                                                            <p className="text-blue-400 text-sm mb-2">{job.company}</p>
+                                                        </div>
+                                                        <a href={job.url} target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-green-600 transition-all">
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                                                        </a>
                                                     </div>
-                                                    <a href={job.url} target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-green-600 transition-all">
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                                                    </a>
-                                                </div>
-                                                <p className="text-gray-400 text-sm line-clamp-2 mb-3">{job.description}</p>
-                                                <div className="flex items-center gap-4 text-xs text-gray-500">
-                                                    <span className="flex items-center gap-1">
-                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                                        {job.location}
-                                                    </span>
-                                                    <span className="bg-gray-700 px-2 py-0.5 rounded text-gray-300">
-                                                        {job.source || 'Matched'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
+                                                    <p className="text-gray-400 text-sm line-clamp-2 mb-3">{job.description}</p>
+                                                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                                                        <span className="flex items-center gap-1">
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                            {job.location}
+                                                        </span>
+                                                        <span className="bg-gray-700 px-2 py-0.5 rounded text-gray-300">
+                                                            {job.source || 'Matched'}
+                                                        </span>
+                                                    </div>
+                                                </motion.div>
+                                            ))
+                                        )}
+                                    </AnimatePresence>
+                                </motion.div>
                             ) : null}
                         </div>
                     </div>

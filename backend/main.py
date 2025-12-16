@@ -907,6 +907,14 @@ def search_jobs(skills: List[str], contract_type: str = "full_time", db: Session
     # Filter by at least one skill matching (simple implementation)
     jobs = query.all()
     
+    # STRICT FILTER: Remove Internships if searching for Full Time
+    # (Adzuna or other sources might label things loosely, so we double check title)
+    if contract_type == "full_time":
+        jobs = [
+            j for j in jobs 
+            if "intern" not in j.title.lower() and "intern" not in (j.contract_type or "").lower()
+        ]
+    
     local_matches = []
     keywords = [s.lower() for s in skills]
     
