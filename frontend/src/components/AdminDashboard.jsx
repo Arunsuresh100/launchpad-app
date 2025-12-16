@@ -649,98 +649,41 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                 </div>
                             </div>
                             
-                            <div className="h-64 relative w-full select-none">
+                            <div className="h-64 relative w-full flex items-end justify-between gap-2 md:gap-4 px-2 select-none">
                                 {analytics.daily_stats && analytics.daily_stats.length > 0 && analytics.daily_stats.some(s => s.users > 0) ? (
                                     (() => {
                                         const data = analytics.daily_stats;
                                         const values = data.map(d => d.users);
-                                        const maxVal = Math.max(...values, 5); 
+                                        const maxVal = Math.max(...values, 5); // Scale
                                         
-                                        const getCoord = (val, i) => ({
-                                            x: (i / (values.length - 1)) * 100,
-                                            y: 100 - (val / maxVal) * 80
+                                        return data.map((stat, i) => {
+                                            const heightPerc = (stat.users / maxVal) * 100;
+                                            return (
+                                                <div key={i} className="flex flex-col items-center justify-end h-full w-full group">
+                                                    {/* Count Label (Always Visible) */}
+                                                    <div className="mb-2 text-blue-400 font-bold text-xs md:text-sm animate-fade-in-up">
+                                                        {stat.users > 0 ? stat.users : ''}
+                                                    </div>
+                                                    
+                                                    {/* Bar */}
+                                                    <div 
+                                                        className="w-full max-w-[30px] md:max-w-[50px] bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-md relative transition-all duration-500 ease-out hover:opacity-80"
+                                                        style={{ height: `${Math.max(heightPerc, 2)}%` }} // Min height 2%
+                                                    >
+                                                        {stat.users === 0 && <div className="absolute top-0 left-0 w-full h-1 bg-slate-700/50 rounded-t-md"></div>}
+                                                    </div>
+                                                    
+                                                    {/* Date Label */}
+                                                    <div className="mt-2 text-[10px] md:text-xs text-slate-500 font-mono text-center">
+                                                        {new Date(stat.date).toLocaleDateString(undefined, {weekday: 'short'})}
+                                                    </div>
+                                                </div>
+                                            )
                                         });
-
-                                        let pathD = "";
-                                        const points = values.map((val, i) => getCoord(val, i));
-
-                                        pathD += `M ${points[0].x},${points[0].y}`;
-                                        for(let i = 0; i < points.length - 1; i++){
-                                            const p0 = points[i];
-                                            const p1 = points[i+1];
-                                            const cp1x = p0.x + (p1.x - p0.x) / 2;
-                                            const cp1y = p0.y;
-                                            const cp2x = p0.x + (p1.x - p0.x) / 2;
-                                            const cp2y = p1.y;
-                                            pathD += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p1.x},${p1.y}`;
-                                        }
-                                        
-                                        const areaPath = `${pathD} L 100,100 L 0,100 Z`;
-
-                                        return (
-                                            <div className="w-full h-full relative cursor-crosshair">
-                                                {/* Grid Lines */}
-                                                <div className="absolute inset-0 flex flex-col justify-between opacity-10 pointer-events-none">
-                                                    {[...Array(5)].map((_, i) => (
-                                                        <div key={i} className="w-full border-b border-white text-[10px] text-white pl-1">
-                                                            {Math.round(maxVal - (i * (maxVal/4)))}
-                                                        </div>
-                                                    ))}
-                                                </div>
-
-                                                <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
-                                                    <defs>
-                                                        <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
-                                                            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4"/>
-                                                            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0"/>
-                                                        </linearGradient>
-                                                    </defs>
-                                                    
-                                                    <path d={areaPath} fill="url(#chartGradient)" />
-                                                    <path d={pathD} fill="none" stroke="#60a5fa" strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" />
-                                                    
-                                                    {points.map((p, i) => {
-                                                        const stat = data[i];
-                                                        return (
-                                                            <g key={i} className="group/point">
-                                                                {/* Hit Area */}
-                                                                <circle cx={p.x} cy={p.y} r="8" fill="transparent" stroke="none" vectorEffect="non-scaling-stroke" className="pointer-events-auto" />
-                                                                
-                                                                {/* Visible Dot (Always Visible) */}
-                                                                <circle cx={p.x} cy={p.y} r="3" className="fill-slate-900 stroke-blue-400 stroke-2 transition-all duration-200 group-hover/point:fill-blue-400 group-hover/point:scale-125" vectorEffect="non-scaling-stroke" />
-                                                                
-                                                                {/* Standard SVG Text Tooltip */}
-                                                                <g className="opacity-0 group-hover/point:opacity-100 transition-opacity pointer-events-none">
-                                                                    <rect x={p.x - 12} y={p.y - 12} width="24" height="20" rx="4" fill="#1e293b" stroke="#475569" strokeWidth="0.5" vectorEffect="non-scaling-stroke" transform={`translate(0, -${p.y > 20 ? 15 : -15})`} />
-                                                                    <text x={p.x} y={p.y} textAnchor="middle" fill="white" fontSize="8" fontWeight="bold" vectorEffect="non-scaling-stroke" transform={`translate(0, -${p.y > 20 ? 12 : -18})`}>
-                                                                        {stat.users}
-                                                                    </text>
-                                                                </g>
-                                                            </g>
-                                                        )
-                                                    })}
-                                                </svg>
-
-                                                {/* X-Axis Labels */}
-                                                <div className="absolute top-full left-0 w-full flex justify-between mt-2 px-1">
-                                                     {data.map((stat, i) => (
-                                                        <span key={i} className="text-[10px] text-slate-500 font-mono text-center w-8">
-                                                            {new Date(stat.date).toLocaleDateString(undefined, {weekday:'short'})}
-                                                        </span>
-                                                     ))}
-                                                </div>
-                                            </div>
-                                        );
                                     })()
                                 ) : (
                                     <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-3 border-2 border-dashed border-slate-800/50 rounded-xl bg-slate-900/50">
-                                        <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center">
-                                            <svg className="w-8 h-8 opacity-40 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
-                                        </div>
-                                        <div className="text-center">
-                                            <p className="text-sm font-medium text-slate-400">No Data Available</p>
-                                            <p className="text-xs text-slate-600 mt-1">Activity will appear here once users start interacting.</p>
-                                        </div>
+                                        <p className="text-sm font-medium text-slate-400">No Data Available</p>
                                     </div>
                                 )}
                             </div>
