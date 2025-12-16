@@ -618,39 +618,92 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
 
 
 
-                        {/* DAILY ACTIVITY GRAPH */}
-                        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-6">
-                            <h3 className="text-lg font-bold text-white mb-6">Daily User Activity (Last 7 Days)</h3>
-                            <div className="h-64 flex items-end justify-between gap-2 px-4 pb-4 border-b border-l border-slate-700/50 relative">
+                        {/* DAILY ACTIVITY GRAPH - Professional Line Chart */}
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-6 relative group">
+                            <div className="flex justify-between items-center mb-8">
+                                <div>
+                                    <h3 className="text-lg font-bold text-white">User Traffic</h3>
+                                    <p className="text-xs text-slate-500 font-mono mt-1">Daily interaction volume (Last 7 Days)</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                     <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                     <span className="text-xs text-blue-400 font-bold">Live Data</span>
+                                </div>
+                            </div>
+                            
+                            <div className="h-64 relative w-full">
                                 {analytics.daily_stats && analytics.daily_stats.length > 0 ? (
-                                    <>
-                                        {/* Y-Axis Guidelines */}
-                                        <div className="absolute inset-0 pointer-events-none flex flex-col justify-between opacity-10">
-                                            {[...Array(5)].map((_, i) => <div key={i} className="w-full h-px bg-white"></div>)}
-                                        </div>
+                                    (() => {
+                                        const data = analytics.daily_stats;
+                                        const values = data.map(d => d.users);
+                                        const maxVal = Math.max(...values, 5); // Minimum chart scale of 5
+                                        const points = values.map((val, i) => {
+                                            const x = (i / (values.length - 1)) * 100;
+                                            const y = 100 - (val / maxVal) * 80; // Leave 20% breathing room at top, 0 at bottom
+                                            return `${x},${y}`;
+                                        }).join(' ');
+
+                                        // Create fill area path
+                                        const fillPath = `0,100 ${points} 100,100`;
                                         
-                                        {analytics.daily_stats.map((stat, i) => {
-                                            const maxUsers = Math.max(...analytics.daily_stats.map(s => s.users), 10);
-                                            const heightPerc = (stat.users / maxUsers) * 100;
-                                            return (
-                                                <div key={i} className="flex flex-col items-center gap-2 group w-full">
-                                                    <div className="relative w-full flex justify-center h-full items-end">
-                                                        <div 
-                                                            className="w-full max-w-[40px] bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t-lg transition-all duration-1000 ease-out hover:opacity-80 relative"
-                                                            style={{ height: `${Math.max(heightPerc, 2)}%` }}
-                                                        >
-                                                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                {stat.users}
-                                                            </div>
+                                        return (
+                                            <div className="w-full h-full relative cursor-crosshair">
+                                                {/* Grid Lines */}
+                                                <div className="absolute inset-0 flex flex-col justify-between opacity-10 pointer-events-none">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <div key={i} className="w-full border-b border-white text-[10px] text-white pl-1">
+                                                            {Math.round(maxVal - (i * (maxVal/4)))}
                                                         </div>
-                                                    </div>
-                                                    <span className="text-[10px] text-slate-500 font-mono rotate-0 whitespace-nowrap">{new Date(stat.date).toLocaleDateString(undefined, {weekday:'short'})}</span>
+                                                    ))}
                                                 </div>
-                                            )
-                                        })}
-                                    </>
+
+                                                <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                                    <defs>
+                                                        <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+                                                            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5"/>
+                                                            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0"/>
+                                                        </linearGradient>
+                                                    </defs>
+                                                    {/* Area Fill */}
+                                                    <polygon points={fillPath} fill="url(#chartGradient)" />
+                                                    {/* Line Stroke */}
+                                                    <polyline points={points} fill="none" stroke="#3b82f6" strokeWidth="3" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" />
+                                                    
+                                                    {/* Data Points */}
+                                                    {data.map((stat, i) => {
+                                                        const x = (i / (values.length - 1)) * 100;
+                                                        const y = 100 - (stat.users / maxVal) * 80;
+                                                        return (
+                                                            <g key={i} className="group/point">
+                                                                <circle cx={x} cy={y} r="2" className="fill-blue-500 stroke-slate-900 stroke-2 hover:r-4 transition-all duration-300 pointer-events-auto" vectorEffect="non-scaling-stroke" />
+                                                                {/* Tooltip */}
+                                                                <foreignObject x={x - 10} y={y - 25} width="20" height="20" className="overflow-visible pointer-events-none opacity-0 group-hover/point:opacity-100 transition-opacity">
+                                                                     <div className="bg-slate-800 text-white text-[10px] font-bold py-1 px-2 rounded -translate-x-1/2 whitespace-nowrap border border-slate-700 shadow-xl flex flex-col items-center">
+                                                                        <span>{stat.users} Users</span>
+                                                                        <span className="text-[8px] text-slate-400">{new Date(stat.date).toLocaleDateString(undefined, {weekday: 'short', day:'numeric'})}</span>
+                                                                     </div>
+                                                                </foreignObject>
+                                                            </g>
+                                                        )
+                                                    })}
+                                                </svg>
+
+                                                {/* X-Axis Labels */}
+                                                <div className="absolute top-full left-0 w-full flex justify-between mt-2 px-1">
+                                                     {data.map((stat, i) => (
+                                                        <span key={i} className="text-[10px] text-slate-500 font-mono text-center w-8">
+                                                            {new Date(stat.date).toLocaleDateString(undefined, {weekday:'short'})}
+                                                        </span>
+                                                     ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()
                                 ) : (
-                                    <p className="w-full text-center text-slate-500 self-center">No daily data available</p>
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-2">
+                                        <svg className="w-8 h-8 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
+                                        <p>No activity data yet</p>
+                                    </div>
                                 )}
                             </div>
                         </div>
