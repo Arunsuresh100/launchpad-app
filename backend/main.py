@@ -244,6 +244,7 @@ async def scan_resume(
             user_name = user.full_name
             
     try:
+        print(f"DEBUG: Received user_id: {user_id} (Type: {type(user_id)})")
         print(f"DEBUG: Starting resume scan for {file.filename}")
         contents = await file.read()
 

@@ -730,7 +730,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                                     <td className="px-6 py-4 text-right">
                                                         {detail.saved_path ? (
                                                             <a 
-                                                                href={`/uploads/${detail.saved_path}`} 
+                                                                href={`${window.location.origin}/uploads/${detail.saved_path}`} 
                                                                 target="_blank" 
                                                                 rel="noopener noreferrer"
                                                                 className="px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/50 rounded-lg text-xs font-bold transition-all uppercase tracking-wide inline-flex items-center gap-1"

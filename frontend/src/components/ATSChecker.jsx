@@ -25,15 +25,22 @@ const ATSChecker = () => {
         
         // Append User ID for analytics if available
         const storedUser = localStorage.getItem("user");
+        console.log("DEBUG: Stored user raw:", storedUser); // DEBUG
         if (storedUser) {
             try {
                 const parsed = JSON.parse(storedUser);
+                console.log("DEBUG: Parsed user:", parsed); // DEBUG
                 if (parsed.id) {
                     formData.append("user_id", parsed.id);
+                    console.log("DEBUG: Appended user_id:", parsed.id); // DEBUG
+                } else {
+                    console.log("DEBUG: No ID found in parsed user object.");
                 }
             } catch(e) { 
                 console.log("Error parsing user data for ID:", e);
             }
+        } else {
+            console.log("DEBUG: No 'user' found in localStorage.");
         }
 
         try {
