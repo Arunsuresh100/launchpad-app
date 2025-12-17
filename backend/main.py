@@ -14,9 +14,11 @@ import bcrypt
 from datetime import datetime, timedelta, date
 
 # Initialize Database
-init_db()
-
 app = FastAPI()
+
+@app.on_event("startup")
+def on_startup():
+    init_db()
 
 # Include Auth Router
 from auth_routes import router as auth_router
