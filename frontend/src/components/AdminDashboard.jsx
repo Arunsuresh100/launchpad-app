@@ -580,53 +580,51 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                         <h2 className="text-xl font-bold text-white mb-4">Detailed Analytics</h2>
                         
                         {/* 3 CIRCLES ROW */}
+                        {/* 3 ANALYTICS CARDS ROW */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {/* Circle 1: Resume Uploads */}
-                            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
-                                <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
-                                    <svg className="w-full h-full transform -rotate-90">
-                                        <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                        <circle className="text-blue-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.resume_uploads, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                    </svg>
-                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                                        <span className="text-3xl font-bold text-white block">{analytics.resume_uploads}</span>
-                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">Uploads</span>
-                                    </div>
+                            {/* Card 1: Resume Uploads */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-blue-500/30 transition-all shadow-lg">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <svg className="w-24 h-24 text-blue-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm0-8h-2V7h2v2z" /></svg>
                                 </div>
-                                <p className="text-sm text-slate-400 text-center">Resumes Uploaded (Job Search)</p>
+                                <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-500 mb-4">
+                                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Total Uploads</h3>
+                                    <p className="text-3xl font-bold text-white">{analytics.resume_uploads}</p>
+                                    <p className="text-xs text-slate-500 mt-2">Resumes processed for jobs</p>
+                                </div>
                             </div>
 
-                            {/* Circle 2: ATS Checks */}
-                            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
-                                <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
-                                    <svg className="w-full h-full transform -rotate-90">
-                                        <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                        <circle className="text-purple-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.ats_checks, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                    </svg>
-                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                                        <span className="text-3xl font-bold text-white block">{analytics.ats_checks}</span>
-                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">Scans</span>
-                                    </div>
+                            {/* Card 2: ATS Scans */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-purple-500/30 transition-all shadow-lg">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <svg className="w-24 h-24 text-purple-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" /></svg>
                                 </div>
-                                <p className="text-sm text-slate-400 text-center">ATS Checks Performed</p>
+                                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-500 mb-4">
+                                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">ATS Scans</h3>
+                                    <p className="text-3xl font-bold text-white">{analytics.ats_checks}</p>
+                                   <p className="text-xs text-slate-500 mt-2">Smarter resume optimizations</p>
+                                </div>
                             </div>
 
-                            {/* Circle 3: Interviews */}
-                            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
-                                <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
-                                    <svg className="w-full h-full transform -rotate-90">
-                                        <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                        <circle className="text-green-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.interviews_attended, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
-                                    </svg>
-                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                                        <span className="text-3xl font-bold text-white block">{analytics.interviews_attended}</span>
-                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">Interviews</span>
-                                    </div>
+                            {/* Card 3: Interviews */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-green-500/30 transition-all shadow-lg">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <svg className="w-24 h-24 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" /></svg>
                                 </div>
-                                <p className="text-sm text-slate-400 text-center">Mock Interviews Completed</p>
+                                <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center text-green-500 mb-4">
+                                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Interviews</h3>
+                                    <p className="text-3xl font-bold text-white">{analytics.interviews_attended}</p>
+                                     <p className="text-xs text-slate-500 mt-2">Confidence building sessions</p>
+                                </div>
                             </div>
                         </div>
 
