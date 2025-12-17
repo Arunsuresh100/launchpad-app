@@ -22,7 +22,7 @@ const ATSChecker = () => {
         // Upload to extract text first
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('skip_logging', 'true');
+        formData.append('source', 'ats_checker'); // Tag as ATS source (excluded from Main Analytics Count, but logged for Table)
         
         try {
             const response = await axios.post('/scan-resume', formData);

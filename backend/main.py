@@ -205,7 +205,7 @@ async def scan_resume(
     user_id: Optional[int] = Form(None),
     user_name: Optional[str] = Form(None),
     user_email: Optional[str] = Form(None),
-    skip_logging: bool = False, # FLAG TO PREVENT DOUBLE COUNTING
+    source: str = Form("job_search"), # Source: 'job_search' or 'ats_checker'
     db: Session = Depends(get_db)
 ):
     if not file.filename.endswith(('.pdf', '.docx')):
@@ -313,36 +313,42 @@ async def scan_resume(
         except Exception as e:
             print(f"File save failed: {e}")
 
-        # LOG ACTIVITY (Only if not skipped)
-        if not skip_logging:
-            try:
-                 # DEBOUNCE: Check if same user uploaded same file in last 15 seconds
-                 # This prevents double counting if frontend sends duplicate requests or user clicks twice
-                 cutoff = datetime.utcnow() - timedelta(seconds=15)
-                 existing = db.query(UserActivity).filter(
-                     UserActivity.activity_type == "resume_upload",
-                     UserActivity.timestamp >= cutoff,
-                     UserActivity.user_name == (user_name or "Candidate"),
-                     UserActivity.details.contains(file.filename)
-                 ).first()
+        # LOG ACTIVITY
+        # If source is 'ats_checker', we log as 'ats_resume_upload' (excluded from Card 1, included in Table)
+        # If source is 'job_search' (default), we log as 'resume_upload' (included in both)
+        try:
+             # DEBOUNCE: Check if same user uploaded same file in last 15 seconds
+             cutoff = datetime.utcnow() - timedelta(seconds=15)
+             
+             activity_type = "ats_resume_upload" if source == "ats_checker" else "resume_upload"
+             
+             existing = db.query(UserActivity).filter(
+                 UserActivity.activity_type == activity_type,
+                 UserActivity.timestamp >= cutoff,
+                 UserActivity.user_name == (user_name or "Candidate"),
+                 UserActivity.details.contains(file.filename)
+             ).first()
 
-                 if not existing:
-                     # Tag as 'resume_upload'
-                     details_str = f"File: {file.filename} (Saved: {saved_filename})" if saved_filename else f"File: {file.filename}"
-                     if user_email:
-                         details_str += f" [Email: {user_email}]"
-                     
-                     act = UserActivity(
-                        user_id=user_id,
-                        user_name=user_name or "Candidate",
-                        activity_type="resume_upload", 
-                        details=details_str
-                     )
-                     db.add(act)
-                     db.commit()
-            except Exception as e:
-                 print(f"Logging Error: {e}")
-                 pass
+             if not existing:
+                 details_str = f"File: {file.filename} (Saved: {saved_filename})" if saved_filename else f"File: {file.filename}"
+                 if user_email:
+                     details_str += f" [Email: {user_email}]"
+                 
+                 # Add source tag to details just in case
+                 if source != "job_search":
+                     details_str += f" [Source: {source}]"
+                 
+                 act = UserActivity(
+                    user_id=user_id,
+                    user_name=user_name or "Candidate",
+                    activity_type=activity_type, 
+                    details=details_str
+                 )
+                 db.add(act)
+                 db.commit()
+        except Exception as e:
+             print(f"Logging Error: {e}")
+             pass
 
         return {
             "filename": file.filename,
@@ -793,7 +799,10 @@ def get_analytics(db: Session = Depends(get_db)):
     
     # --- RESUME FILES TABLE (Fixed for Multiple Files) ---
     # Fetch larger set to ensuring we capture multiple uploads
-    resume_logs = db.query(UserActivity).filter(UserActivity.activity_type == "resume_upload").order_by(UserActivity.timestamp.desc()).limit(100).all()
+    # Include both 'resume_upload' (Job Search) and 'ats_resume_upload' (ATS)
+    resume_logs = db.query(UserActivity).filter(
+        UserActivity.activity_type.in_(["resume_upload", "ats_resume_upload"])
+    ).order_by(UserActivity.timestamp.desc()).limit(100).all()
     
     resume_details = []
     seen_uploads = set() 
@@ -1167,20 +1176,9 @@ def search_jobs(skills: List[str], contract_type: str = "full_time", db: Session
                 found_any = True
                 
     # LOG ACTIVITY (If skills were provided, implies a search/upload happened)
-    if skills:
-        try:
-             # Just log it happened. 
-             # We tag it as 'resume_upload' because that's the user action name requested for analytics counts
-             act = UserActivity(
-                user_id=None,
-                user_name="Candidate",
-                activity_type="resume_upload", 
-                details=f"Skills: {len(skills)}"
-             )
-             db.add(act)
-             db.commit()
-        except:
-             pass
+    # LOG ACTIVITY REMOVED to prevent double counting
+    # scan_resume handles the upload logging now.
+    pass
                 
     # Fallback if no specific map found but we have skills
     if not found_any and keywords:

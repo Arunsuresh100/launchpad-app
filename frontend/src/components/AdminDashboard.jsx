@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area 
+} from 'recharts';
 
 // Force Frontend Build Update V3 - Final UI Polish
 
@@ -664,38 +667,52 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                             </div>
                         </div>
 
-                        {/* DAILY ACTIVITY GRAPH */}
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-6">
                             <h3 className="text-lg font-bold text-white mb-6">User Activity Trends (Last 7 Days)</h3>
                             <div className="h-64 flex items-end justify-between gap-2 px-4 pb-4 border-b border-l border-slate-700/50 relative">
                                 {analytics.daily_stats && analytics.daily_stats.length > 0 ? (
-                                    <>
-                                        {/* Background Grid */}
-                                        <div className="absolute inset-0 pointer-events-none flex flex-col justify-between opacity-5">
-                                            {[...Array(5)].map((_, i) => <div key={i} className="w-full h-px bg-white"></div>)}
-                                        </div>
-                                        
-                                        {analytics.daily_stats.map((stat, i) => {
-                                            const maxUsers = Math.max(...analytics.daily_stats.map(s => s.users), 5);
-                                            const heightPerc = (stat.users / maxUsers) * 100;
-                                            return (
-                                                <div key={i} className="flex flex-col items-center gap-2 group w-full">
-                                                    <div className="relative w-full flex justify-center h-full items-end">
-                                                        <div 
-                                                            className="w-full max-w-[40px] bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t-lg transition-all duration-1000 ease-out hover:opacity-100 opacity-90 relative shadow-[0_0_15px_rgba(37,99,235,0.4)]"
-                                                            style={{ height: `${Math.max(heightPerc, 2)}%` }}
-                                                        >
-                                                            <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs py-1.5 px-3 rounded-lg border border-slate-700 shadow-xl opacity-0 group-hover:opacity-100 transition-all font-bold z-10 whitespace-nowrap">
-                                                                {stat.users} Activities
-                                                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45 border-r border-b border-slate-700"></div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <span className="text-[10px] text-slate-500 font-mono text-center leading-tight">{new Date(stat.date).toLocaleDateString(undefined, {weekday:'short'})}<br/><span className="opacity-50">{new Date(stat.date).getDate()}</span></span>
-                                                </div>
-                                            )
-                                        })}
-                                    </>
+                                    <div className="absolute inset-0 top-0 left-0 w-full h-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <LineChart data={analytics.daily_stats}>
+                                                <defs>
+                                                    <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                                                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                                                <XAxis 
+                                                    dataKey="date" 
+                                                    stroke="#64748b" 
+                                                    tick={{fill: '#64748b', fontSize: 10}}
+                                                    tickLine={false}
+                                                    axisLine={false}
+                                                    tickFormatter={(str) => new Date(str).toLocaleDateString(undefined, {weekday:'short'})}
+                                                />
+                                                <YAxis 
+                                                    hide={false} 
+                                                    stroke="#64748b" 
+                                                    tick={{fill: '#64748b', fontSize: 10}} 
+                                                    tickLine={false} 
+                                                    axisLine={false}
+                                                    allowDecimals={false}
+                                                />
+                                                <Tooltip 
+                                                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px' }}
+                                                    itemStyle={{ color: '#60a5fa' }}
+                                                />
+                                                <Line 
+                                                    type="monotone" 
+                                                    dataKey="users" 
+                                                    stroke="#3B82F6" 
+                                                    strokeWidth={3} 
+                                                    dot={{ r: 4, fill: '#3B82F6', strokeWidth: 2, stroke: '#1e293b' }}
+                                                    activeDot={{ r: 6 }} 
+                                                    name="Users"
+                                                />
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    </div>
                                 ) : (
                                     <p className="w-full text-center text-slate-500 self-center">No daily data available yet.</p>
                                 )}
