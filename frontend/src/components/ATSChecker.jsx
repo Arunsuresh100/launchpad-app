@@ -23,32 +23,8 @@ const ATSChecker = () => {
         const formData = new FormData();
         formData.append('file', file);
         
-        // Append User ID for analytics if available
-        const storedUser = localStorage.getItem("user");
-        console.log("DEBUG: Stored user raw:", storedUser); // DEBUG
-        if (storedUser) {
-            try {
-                const parsed = JSON.parse(storedUser);
-                console.log("DEBUG: Parsed user:", parsed); // DEBUG
-                if (parsed.id) {
-                    formData.append("user_id", parsed.id);
-                    console.log("DEBUG: Appended user_id:", parsed.id); // DEBUG
-                } else {
-                    console.log("DEBUG: No ID found in parsed user object.");
-                }
-            } catch(e) { 
-                console.log("Error parsing user data for ID:", e);
-            }
-        } else {
-            console.log("DEBUG: No 'user' found in localStorage.");
-        }
-
         try {
-            const response = await axios.post('http://127.0.0.1:8000/scan-resume', formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+            const response = await axios.post('/scan-resume', formData);
              setResumeText(response.data.text_preview); 
         } catch (err) {
             console.error(err);
@@ -111,15 +87,15 @@ const ATSChecker = () => {
                     <div className="flex flex-col h-full w-full">
                         <div className="flex items-center justify-between mb-4">
                             <label className="flex items-center gap-3 text-lg font-bold text-white">
-                                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 font-mono text-sm shadow-[0_0_15px_rgba(59,130,246,0.2)]">01</span>
-                                Upload Resume
+                                <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-mono text-sm flex-shrink-0">01</div>
+                                Resume Source
                             </label>
                             {resumeFile && (
                                 <button 
-                                    onClick={(e) => { e.preventDefault(); setResumeFile(null); setResumeText(''); }}
-                                    className="px-3 py-1 text-xs font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-full transition-all"
+                                    onClick={() => { setResumeFile(null); setResumeText(''); }}
+                                    className="text-xs text-red-400 hover:text-red-300 transition-colors"
                                 >
-                                    Remove File
+                                    Remove
                                 </button>
                             )}
                         </div>
@@ -134,53 +110,40 @@ const ATSChecker = () => {
                             />
                             <label 
                                 htmlFor="ats-resume-upload" 
-                                className={`h-full min-h-[220px] md:min-h-[350px] flex flex-col items-center justify-center border-2 border-dashed rounded-3xl cursor-pointer transition-all duration-500 relative overflow-hidden w-full backdrop-blur-sm
+                                className={`h-full min-h-[180px] md:min-h-[300px] flex flex-col items-center justify-center border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 relative overflow-hidden w-full
                                     ${resumeFile 
-                                        ? 'border-blue-500 bg-blue-900/10 shadow-[0_0_30px_rgba(59,130,246,0.1)]' 
-                                        : 'border-slate-700/50 hover:border-blue-500/50 hover:bg-slate-800/30'
+                                        ? 'border-blue-500/50 bg-blue-500/5' 
+                                        : 'border-slate-700 hover:border-slate-500 hover:bg-slate-800/50'
                                     }`}
                             >
-                                {/* Animated Background Pattern */}
-                                <div className="absolute inset-0 opacity-0 group-hover/upload:opacity-100 transition-opacity duration-700 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500/5 to-transparent pointer-events-none"></div>
-
                                 {analyzingResume ? (
-                                    <div className="text-center z-10 p-6">
-                                        <div className="relative">
-                                            <div className="w-16 h-16 md:w-20 md:h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-6"></div>
-                                            <div className="absolute inset-0 flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-blue-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                                            </div>
-                                        </div>
-                                        <p className="text-blue-400 font-mono font-bold tracking-wider animate-pulse text-sm md:text-base">PARSING DOCUMENT...</p>
+                                    <div className="text-center z-10">
+                                        <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+                                        <p className="text-blue-400 font-mono animate-pulse text-sm md:text-base">EXTRACTING...</p>
                                     </div>
                                 ) : resumeFile ? (
-                                    <div className="text-center z-10 w-full px-6 flex flex-col items-center animate-fade-in-up">
-                                        <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-[0_10px_30px_rgba(37,99,235,0.3)] transform transition-transform group-hover/upload:scale-105 group-hover/upload:rotate-3">
-                                            <svg className="w-10 h-10 md:w-12 md:h-12 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    <div className="text-center z-10 p-4 w-full max-w-full min-w-0">
+                                        <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/20">
+                                            <svg className="w-8 h-8 md:w-10 md:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                         </div>
-                                        <div className="bg-slate-900/80 rounded-xl px-4 py-3 border border-slate-700/50 max-w-full">
-                                            <p className="text-base md:text-lg font-bold text-white truncate max-w-[200px] mx-auto">
-                                                {resumeFile.name}
-                                            </p>
-                                            <p className="text-slate-400 text-xs mt-1 font-mono uppercase">
-                                                {(resumeFile.size / 1024).toFixed(1)} KB • PDF
-                                            </p>
-                                        </div>
-                                        <div className="mt-5 flex items-center gap-2 text-green-400 text-xs md:text-sm font-bold bg-green-500/10 py-1.5 px-4 rounded-full border border-green-500/20 shadow-sm">
-                                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                            Ready for Analysis
+                                        <p className="text-base md:text-xl font-bold text-white mb-1 truncate px-2 max-w-full block">
+                                            {resumeFile.name}
+                                        </p>
+                                        <p className="text-slate-400 text-xs md:text-sm">PDF • {(resumeFile.size / 1024).toFixed(0)} KB</p>
+                                        <div className="mt-4 md:mt-6 flex items-center justify-center gap-2 text-green-400 text-xs md:text-sm font-medium bg-green-500/10 py-1.5 px-3 md:py-2 md:px-4 rounded-full w-fit mx-auto border border-green-500/20">
+                                            <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                                            Ready
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="text-center z-10 space-y-4 px-4">
-                                        <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto group-hover/upload:scale-110 group-hover/upload:bg-blue-500/20 transition-all duration-300 border border-slate-700/50 group-hover/upload:border-blue-500/50 shadow-inner">
-                                            <svg className="w-8 h-8 md:w-10 md:h-10 text-slate-400 group-hover/upload:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                                    <div className="text-center z-10 space-y-3 px-2">
+                                        <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto group-hover/upload:scale-110 transition-transform duration-300 border border-slate-700 group-hover/upload:border-slate-600">
+                                            <svg className="w-6 h-6 md:w-8 md:h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
                                         </div>
                                         <div>
-                                            <p className="text-lg md:text-xl font-bold text-slate-200 group-hover/upload:text-white transition-colors">Drop Resume Here</p>
-                                            <p className="text-slate-500 text-sm mt-1 group-hover/upload:text-slate-400">or click to browse</p>
+                                            <p className="text-base md:text-lg font-medium text-slate-300">Tap to upload</p>
+                                            <p className="text-slate-500 text-xs md:text-sm mt-1">PDF only</p>
                                         </div>
-                                        <span className="inline-block px-3 py-1 bg-slate-800 rounded text-[10px] text-slate-500 font-mono border border-slate-700">Supported: PDF</span>
                                     </div>
                                 )}
                             </label>
@@ -191,42 +154,28 @@ const ATSChecker = () => {
                     <div className="flex flex-col h-full w-full">
                          <div className="flex items-center justify-between mb-4">
                             <label className="flex items-center gap-3 text-lg font-bold text-white">
-                                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 font-mono text-sm shadow-[0_0_15px_rgba(168,85,247,0.2)]">02</span>
-                                Job Description
+                                <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 font-mono text-sm flex-shrink-0">02</div>
+                                Target Job
                             </label>
-                            <span className={`text-xs font-mono transition-colors ${jobDescription.length > 50 ? 'text-green-400' : 'text-slate-500'}`}>
-                                {jobDescription.length} chars
-                            </span>
+                            <span className="text-xs text-slate-500 font-mono">{jobDescription.length} chars</span>
                         </div>
 
-                        <div className="flex-1 relative group/jd w-full flex flex-col">
-                            {/* Editor Window Header */}
-                            <div className="h-9 bg-slate-800/80 rounded-t-2xl border-x border-t border-slate-700 flex items-center px-4 gap-2">
-                                <div className="flex gap-1.5">
-                                    <div className="w-3 h-3 rounded-full bg-red-500/50"></div>
-                                    <div className="w-3 h-3 rounded-full bg-yellow-500/50"></div>
-                                    <div className="w-3 h-3 rounded-full bg-green-500/50"></div>
-                                </div>
-                                <span className="text-[10px] text-slate-400 font-mono ml-2 uppercase">Input_Job_Requirements.txt</span>
-                            </div>
+                        <div className="flex-1 relative group/jd w-full">
+                            <div className="absolute inset-0 bg-slate-900 rounded-2xl border border-slate-700 transition-colors group-hover/jd:border-slate-600"></div>
+                            <textarea 
+                                className="relative w-full h-full min-h-[180px] md:min-h-[300px] bg-transparent rounded-2xl p-4 md:p-6 text-sm md:text-base text-slate-200 
+                                    focus:outline-none resize-none placeholder-slate-600 custom-scrollbar leading-relaxed font-mono z-10"
+                                placeholder="Paste the full Job Description here. Include responsibilities, requirements, and qualifications to get the best ATS score analysis."
+                                value={jobDescription}
+                                onChange={(e) => {
+                                    setJobDescription(e.target.value);
+                                    if (error) setError('');
+                                }}
+                            ></textarea>
                             
-                            <div className="flex-1 relative">
-                                <div className="absolute inset-0 bg-slate-900/80 rounded-b-2xl border-x border-b border-slate-700 transition-colors group-hover/jd:border-slate-600/80 group-focus-within:border-purple-500/50 group-focus-within:shadow-[0_0_20px_rgba(168,85,247,0.1)]"></div>
-                                <textarea 
-                                    className="relative w-full h-full min-h-[200px] md:min-h-[315px] bg-transparent rounded-b-2xl p-4 md:p-6 text-sm md:text-base text-slate-200 
-                                        focus:outline-none resize-none placeholder-slate-600 custom-scrollbar leading-relaxed font-mono z-10"
-                                    placeholder="Paste the Job Description (JD) here...&#10;&#10;Tip: You can also just type a role like 'Software Engineer' or 'Data Analyst' for a quick check."
-                                    value={jobDescription}
-                                    onChange={(e) => {
-                                        setJobDescription(e.target.value);
-                                        if (error) setError('');
-                                    }}
-                                ></textarea>
-                                
-                                {/* Corner Accent */}
-                                <div className="absolute bottom-4 right-4 pointer-events-none opacity-20">
-                                    <svg className="w-16 h-16 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-                                </div>
+                            {/* Corner Accent */}
+                            <div className="absolute top-0 right-0 p-4 pointer-events-none opacity-50">
+                                <svg className="w-5 h-5 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
                             </div>
                         </div>
                     </div>

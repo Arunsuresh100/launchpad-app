@@ -110,6 +110,19 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
             setLoading(false);
         }
     };
+
+    const handleResetAnalytics = async () => {
+        if (window.confirm("WARNING: This will delete ALL Analytics data (uploads, interviews, scans). This cannot be undone.")) {
+            try {
+                await axios.delete('/admin/analytics');
+                alert("Analytics data reset successfully.");
+                fetchData(); // Refresh
+            } catch (e) {
+                console.error(e);
+                alert("Failed to reset data.");
+            }
+        }
+    };
     
     // Re-define helper for render scope
     const formatDate = (dateStr) => {
@@ -565,126 +578,92 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                     <div className="space-y-8">
                         <h2 className="text-xl font-bold text-white mb-4">Detailed Analytics</h2>
                         
-                        {/* 3 METRIC CARDS (Replaces Circles) */}
+                        {/* 3 CIRCLES ROW */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {/* Card 1: Resume Uploads */}
-                            <div className="group bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-2xl p-6 relative overflow-hidden transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/10 hover:border-blue-500/30">
-                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                    <svg className="w-24 h-24 text-blue-500 transform rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                                </div>
-                                <div className="relative z-10 flex flex-col h-full justify-between">
-                                    <div className="mb-4">
-                                        <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform text-blue-400">
-                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                                        </div>
-                                        <h3 className="text-slate-400 text-sm font-medium uppercase tracking-wider">Total Uploads</h3>
-                                    </div>
-                                    <div>
-                                        <span className="text-4xl font-bold text-white tracking-tight block group-hover:text-blue-400 transition-colors">
-                                            {analytics.resume_uploads}
-                                        </span>
-                                        <p className="text-xs text-slate-500 mt-1">Resumes processed for jobs</p>
+                            {/* Circle 1: Resume Uploads */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
+                                <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
+                                    <svg className="w-full h-full transform -rotate-90">
+                                        <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                        <circle className="text-blue-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.resume_uploads, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                    </svg>
+                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                                        <span className="text-3xl font-bold text-white block">{analytics.resume_uploads}</span>
+                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">Uploads</span>
                                     </div>
                                 </div>
-                                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-blue-600 to-transparent w-full opacity-50"></div>
+                                <p className="text-sm text-slate-400 text-center">Resumes Uploaded (Job Search)</p>
                             </div>
 
-                            {/* Card 2: ATS Checks */}
-                            <div className="group bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-2xl p-6 relative overflow-hidden transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-purple-500/10 hover:border-purple-500/30">
-                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                    <svg className="w-24 h-24 text-purple-500 transform -rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
-                                </div>
-                                <div className="relative z-10 flex flex-col h-full justify-between">
-                                    <div className="mb-4">
-                                        <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform text-purple-400">
-                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                                        </div>
-                                        <h3 className="text-slate-400 text-sm font-medium uppercase tracking-wider">ATS Scans</h3>
-                                    </div>
-                                    <div>
-                                        <span className="text-4xl font-bold text-white tracking-tight block group-hover:text-purple-400 transition-colors">
-                                            {analytics.ats_checks}
-                                        </span>
-                                        <p className="text-xs text-slate-500 mt-1">Smarter resume optimizations</p>
+                            {/* Circle 2: ATS Checks */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
+                                <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
+                                    <svg className="w-full h-full transform -rotate-90">
+                                        <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                        <circle className="text-purple-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.ats_checks, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                    </svg>
+                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                                        <span className="text-3xl font-bold text-white block">{analytics.ats_checks}</span>
+                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">Scans</span>
                                     </div>
                                 </div>
-                                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-purple-600 to-transparent w-full opacity-50"></div>
+                                <p className="text-sm text-slate-400 text-center">ATS Checks Performed</p>
                             </div>
 
-                            {/* Card 3: Interviews */}
-                            <div className="group bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-2xl p-6 relative overflow-hidden transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-green-500/10 hover:border-green-500/30">
-                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                    <svg className="w-24 h-24 text-green-500 transform rotate-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-                                </div>
-                                <div className="relative z-10 flex flex-col h-full justify-between">
-                                    <div className="mb-4">
-                                        <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform text-green-400">
-                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
-                                        </div>
-                                        <h3 className="text-slate-400 text-sm font-medium uppercase tracking-wider">Interviews</h3>
-                                    </div>
-                                    <div>
-                                        <span className="text-4xl font-bold text-white tracking-tight block group-hover:text-green-400 transition-colors">
-                                            {analytics.interviews_attended}
-                                        </span>
-                                        <p className="text-xs text-slate-500 mt-1">Confidence building sessions</p>
+                            {/* Circle 3: Interviews */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center relative overlow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
+                                <div className="relative w-32 h-32 md:w-40 md:h-40 mb-4">
+                                    <svg className="w-full h-full transform -rotate-90">
+                                        <circle className="text-slate-800" strokeWidth="10" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                        <circle className="text-green-500 transition-all duration-1000 ease-out" strokeWidth="10" strokeDasharray={351} strokeDashoffset={351 - (351 * Math.min(analytics.interviews_attended, 100)) / 100} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="50%" cy="50%" />
+                                    </svg>
+                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                                        <span className="text-3xl font-bold text-white block">{analytics.interviews_attended}</span>
+                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">Interviews</span>
                                     </div>
                                 </div>
-                                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-green-600 to-transparent w-full opacity-50"></div>
+                                <p className="text-sm text-slate-400 text-center">Mock Interviews Completed</p>
                             </div>
                         </div>
 
 
 
-                        {/* DAILY ACTIVITY GRAPH - Professional Line Chart */}
-                        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-6 relative group">
-                            <div className="flex justify-between items-center mb-8">
-                                <div>
-                                    <h3 className="text-lg font-bold text-white">User Traffic</h3>
-                                    <p className="text-xs text-slate-500 font-mono mt-1">Daily interaction volume (Last 7 Days)</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                     <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                                     <span className="text-xs text-blue-400 font-bold">Live Data</span>
-                                </div>
-                            </div>
-                            
-                            <div className="h-64 relative w-full flex items-end justify-between gap-2 md:gap-4 px-2 select-none">
-                                {analytics.daily_stats && analytics.daily_stats.length > 0 && analytics.daily_stats.some(s => s.users > 0) ? (
-                                    (() => {
-                                        const data = analytics.daily_stats;
-                                        const values = data.map(d => d.users);
-                                        const maxVal = Math.max(...values, 5); // Scale
+                        {/* DAILY ACTIVITY GRAPH */}
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-6">
+                            <h3 className="text-lg font-bold text-white mb-6">Daily User Activity (Last 7 Days)</h3>
+                            <div className="h-64 flex items-end justify-between gap-2 px-4 pb-4 border-b border-l border-slate-700/50 relative">
+                                {analytics.daily_stats && analytics.daily_stats.length > 0 ? (
+                                    <>
+                                        {/* Y-Axis Guidelines */}
+                                        <div className="absolute inset-0 pointer-events-none flex flex-col justify-between opacity-10">
+                                            {[...Array(5)].map((_, i) => <div key={i} className="w-full h-px bg-white"></div>)}
+                                        </div>
                                         
-                                        return data.map((stat, i) => {
-                                            const heightPerc = (stat.users / maxVal) * 100;
+                                        {analytics.daily_stats.map((stat, i) => {
+                                            const maxUsers = Math.max(...analytics.daily_stats.map(s => s.users), 10);
+                                            const heightPerc = (stat.users / maxUsers) * 100;
                                             return (
-                                                <div key={i} className="flex flex-col items-center justify-end h-full w-full group">
-                                                    {/* Count Label (Always Visible) */}
-                                                    <div className="mb-2 text-blue-400 font-bold text-xs md:text-sm animate-fade-in-up">
-                                                        {stat.users > 0 ? stat.users : ''}
+                                                <div key={i} className="flex flex-col items-center gap-2 group w-full">
+                                                    <div className="relative w-full flex justify-center h-full items-end">
+                                                        <div 
+                                                            className="w-full max-w-[40px] bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t-lg transition-all duration-1000 ease-out hover:opacity-80 relative"
+                                                            style={{ height: `${Math.max(heightPerc, 2)}%` }}
+                                                        >
+                                                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                {stat.users}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    
-                                                    {/* Bar */}
-                                                    <div 
-                                                        className="w-full max-w-[30px] md:max-w-[50px] bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-md relative transition-all duration-500 ease-out hover:opacity-80"
-                                                        style={{ height: `${Math.max(heightPerc, 2)}%` }} // Min height 2%
-                                                    >
-                                                        {stat.users === 0 && <div className="absolute top-0 left-0 w-full h-1 bg-slate-700/50 rounded-t-md"></div>}
-                                                    </div>
-                                                    
-                                                    {/* Date Label */}
-                                                    <div className="mt-2 text-[10px] md:text-xs text-slate-500 font-mono text-center">
-                                                        {new Date(stat.date).toLocaleDateString(undefined, {weekday: 'short'})}
-                                                    </div>
+                                                    <span className="text-[10px] text-slate-500 font-mono rotate-0 whitespace-nowrap">{new Date(stat.date).toLocaleDateString(undefined, {weekday:'short'})}</span>
                                                 </div>
                                             )
-                                        });
-                                    })()
+                                        })}
+                                    </>
                                 ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-3 border-2 border-dashed border-slate-800/50 rounded-xl bg-slate-900/50">
-                                        <p className="text-sm font-medium text-slate-400">No Data Available</p>
-                                    </div>
+                                    <p className="w-full text-center text-slate-500 self-center">No daily data available</p>
                                 )}
                             </div>
                         </div>
@@ -696,95 +675,73 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                     <span className="w-2 h-2 rounded-full bg-blue-500"></span>
                                     Resume Uploads & Files
                                 </h3>
-                                <button onClick={fetchData} className="text-xs text-blue-400 hover:text-white transition-colors">Refresh</button>
+                                <div className="flex gap-3">
+                                    <button onClick={handleResetAnalytics} className="text-xs text-red-500 hover:text-red-400 bg-red-500/10 px-2 py-1 rounded border border-red-500/20 transition-colors">Reset Data</button>
+                                    <button onClick={fetchData} className="text-xs text-blue-400 hover:text-white transition-colors">Refresh</button>
+                                </div>
                             </div>
-                            <div className="hidden md:block overflow-x-auto">
+                            <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm text-slate-400">
                                     <thead className="bg-slate-950 text-slate-200 uppercase text-xs font-bold tracking-wider">
                                         <tr>
-                                            <th className="px-6 py-4">User Name</th>
-                                            <th className="px-6 py-4">Uploaded File</th>
-                                            <th className="px-6 py-4">Date</th>
-                                            <th className="px-6 py-4 text-right">Action</th>
+                                            <th className="px-6 py-4 w-1/4">User Name</th>
+                                            <th className="px-6 py-4">Files / History</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-800">
                                         {analytics.resume_details && analytics.resume_details.length > 0 ? (
-                                            analytics.resume_details.map((detail, idx) => (
-                                                <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex flex-col">
-                                                            <span className="font-bold text-white">{detail.user_name || "Guest Candidate"}</span>
-                                                            <span className="text-xs text-slate-500">{detail.user_email || "No Email"}</span>
+                                            Object.entries(analytics.resume_details.reduce((acc, curr) => {
+                                                (acc[curr.user_name] = acc[curr.user_name] || []).push(curr);
+                                                return acc;
+                                            }, {})).map(([userName, files], grpIdx) => (
+                                                <tr key={grpIdx} className="hover:bg-slate-800/20 transition-colors">
+                                                    <td className="px-6 py-4 font-bold text-white align-top border-r border-slate-800/50 bg-slate-900/50">
+                                                        <div className="sticky top-0">
+                                                            {userName}
+                                                            {files[0].user_email && (
+                                                                <span className="block text-[11px] text-blue-400 font-normal mt-0.5 mb-1">{files[0].user_email}</span>
+                                                            )}
+                                                            <span className="block text-[10px] text-slate-500 font-normal mt-1">{files.length} Uploads</span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-2">
-                                                            <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                                                            <span className="text-slate-300">{detail.filename}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-xs font-mono">
-                                                        {formatDate(detail.date)}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right">
-                                                        {detail.saved_path ? (
-                                                            <a 
-                                                                href={`${window.location.origin}/uploads/${detail.saved_path}`} 
-                                                                target="_blank" 
-                                                                rel="noopener noreferrer"
-                                                                className="px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/50 rounded-lg text-xs font-bold transition-all uppercase tracking-wide inline-flex items-center gap-1"
-                                                            >
-                                                                View <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                                            </a>
-                                                        ) : (
-                                                            <span className="text-xs text-slate-600 italic">File not saved</span>
-                                                        )}
+                                                    <td className="p-0">
+                                                        <table className="w-full">
+                                                            <tbody>
+                                                                {files.map((file, fIdx) => (
+                                                                    <tr key={fIdx} className={fIdx !== files.length -1 ? "border-b border-slate-800/30" : ""}>
+                                                                        <td className="px-6 py-3 w-1/3">
+                                                                            <div className="flex items-center gap-2">
+                                                                                <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                                                                <span className="text-slate-300 text-sm truncate max-w-[200px]" title={file.filename}>{file.filename}</span>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td className="px-6 py-3 w-1/4 text-xs font-mono text-slate-500 whitespace-nowrap">
+                                                                            {formatDate(file.date)}
+                                                                        </td>
+                                                                        <td className="px-6 py-3 text-right">
+                                                                            {file.saved_path ? (
+                                                                                <a 
+                                                                                    href={`/uploads/${file.saved_path}`} 
+                                                                                    target="_blank" 
+                                                                                    rel="noopener noreferrer"
+                                                                                    className="px-3 py-1 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/50 rounded-md text-xs font-bold transition-all uppercase inline-flex items-center gap-1"
+                                                                                >
+                                                                                    View
+                                                                                </a>
+                                                                            ) : <span className="text-slate-600 text-xs italic">N/A</span>}
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
-                                            <tr><td colSpan="4" className="text-center py-8 text-slate-500">No resumes uploaded recently.</td></tr>
+                                            <tr><td colSpan="2" className="text-center py-8 text-slate-500">No resumes uploaded recently.</td></tr>
                                         )}
                                     </tbody>
                                 </table>
-                            </div>
-
-                            {/* Mobile Cards for Resumes */}
-                            <div className="md:hidden space-y-3 p-3">
-                                {analytics.resume_details && analytics.resume_details.length > 0 ? (
-                                    analytics.resume_details.map((detail, idx) => (
-                                        <div key={idx} className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col gap-3 shadow-sm">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-blue-900/20 text-blue-400 flex items-center justify-center font-bold">
-                                                        UP
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-bold text-white text-sm">{detail.user_name || "Guest Candidate"}</h4>
-                                                        <p className="text-[10px] text-slate-500 font-mono">{formatDate(detail.date)}</p>
-                                                    </div>
-                                                </div>
-                                                {detail.saved_path && (
-                                                    <a 
-                                                        href={`/uploads/${detail.saved_path}`} 
-                                                        target="_blank" 
-                                                        rel="noopener noreferrer"
-                                                        className="p-2 bg-blue-600/10 text-blue-400 rounded-lg hover:bg-blue-600/20 transition-colors"
-                                                    >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                                    </a>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-2 bg-slate-900 px-3 py-2 rounded-lg border border-slate-800/50">
-                                                <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                                                <span className="text-xs text-slate-300 truncate">{detail.filename}</span>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center p-6 text-slate-500">No resumes uploaded recently.</div>
-                                )}
                             </div>
                         </div>
                     </div>

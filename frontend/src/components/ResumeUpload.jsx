@@ -36,6 +36,19 @@ const ResumeUpload = () => {
         
         const formData = new FormData();
         formData.append('file', fileToUpload);
+        
+        // Add User Auth Data if available
+        try {
+            const savedUser = localStorage.getItem('user');
+            if (savedUser) {
+                const userObj = JSON.parse(savedUser);
+                if (userObj.id) formData.append('user_id', userObj.id);
+                if (userObj.full_name) formData.append('user_name', userObj.full_name);
+                if (userObj.email) formData.append('user_email', userObj.email);
+            }
+        } catch (e) {
+            console.error("Auth Error", e);
+        }
 
         try {
             const response = await axios.post('/scan-resume', formData, {

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, status, Form
+from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr
@@ -21,6 +21,9 @@ app = FastAPI()
 # Include Auth Router
 from auth_routes import router as auth_router
 app.include_router(auth_router)
+
+# Mount Uploads for viewing
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # CORS Config
 origins = ["*"]
@@ -192,62 +195,19 @@ def reset_database_force():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-
-# --- PRODUCTION RESET TOOL ---
-@app.api_route("/admin/reset-prod-db", methods=["GET", "POST"])
-def reset_production_database(db: Session = Depends(get_db)):
-    try:
-        # 1. Delete DB Records
-        rows = db.query(UserActivity).delete()
-        db.commit()
-        
-        # 2. Delete Uploaded Files (Physical)
-        deleted_files = 0
-        upload_dir = "./uploads"
-        if os.path.exists(upload_dir):
-            for f in os.listdir(upload_dir):
-                file_path = os.path.join(upload_dir, f)
-                try:
-                    if os.path.isfile(file_path):
-                        os.unlink(file_path)
-                        deleted_files += 1
-                except Exception as e:
-                    print(f"Error deleting {f}: {e}")
-
-        return {
-            "status": "success", 
-            "message": f"RESET COMPLETE. Deleted {rows} activity logs and {deleted_files} uploaded files from server.",
-            "action_required": "Please refresh your Admin Dashboard."
-        }
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Reset failed: {str(e)}")
-
-
 @app.post("/scan-resume")
 async def scan_resume(
     file: UploadFile = File(...), 
     user_id: Optional[int] = Form(None),
+    user_name: Optional[str] = Form(None),
+    user_email: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
     if not file.filename.endswith(('.pdf', '.docx')):
         raise HTTPException(status_code=400, detail="Invalid file format. Please upload PDF or DOCX.")
     
-    # Resolve User Name if user_id provided
-    user_name = "Candidate"
-    user_email = "Unknown" 
-    
-    if user_id:
-        user = db.query(User).filter(User.id == user_id).first()
-        if user:
-            user_name = user.full_name
-            
     try:
-        print(f"DEBUG: Received user_id: {user_id} (Type: {type(user_id)})")
-        print(f"DEBUG: Starting resume scan for {file.filename}")
         contents = await file.read()
-
         
         # Check size (rough check: 5MB limit)
         if len(contents) > 5 * 1024 * 1024:
@@ -350,24 +310,29 @@ async def scan_resume(
             print(f"File save failed: {e}")
 
         # LOG ACTIVITY
+
         try:
-            act = UserActivity(
-                user_id=user_id if user_id else None,
-                user_name=user_name,
+             # Tag as 'resume_upload'
+             details_str = f"File: {file.filename} (Saved: {saved_filename})" if saved_filename else f"File: {file.filename}"
+             if user_email:
+                 details_str += f" [Email: {user_email}]"
+             
+             act = UserActivity(
+                user_id=user_id,
+                user_name=user_name or "Candidate",
                 activity_type="resume_upload", 
-                details=f"File: {file.filename} (Saved: {saved_filename})" if saved_filename else f"File: {file.filename}"
-            )
-            db.add(act)
-            db.commit()
-        except Exception as e:
-            print(f"Log Error: {e}")
+                details=details_str
+             )
+             db.add(act)
+             db.commit()
+        except:
+             pass
 
         return {
             "filename": file.filename,
             "extracted_skills": sorted(list(extracted_skills)), 
             "text_preview": text[:500] 
         }
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -404,7 +369,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     # Create new user
     hashed_pwd = get_password_hash(user.password)
     # Auto-assign admin role for the specific email
-    role = "admin" if user.email == "uresha498@gmail.com" else "user"
+    role = "admin" if user.email in ["uresha498@gmail.com", "admin@example.com"] else "user"
     
     new_user = User(
         email=user.email, 
@@ -747,11 +712,12 @@ def get_analytics(db: Session = Depends(get_db)):
     graph_data = [{"date": k, "users": v} for k, v in daily_counts.items()]
     
     # --- RESUME FILES TABLE ---
-    # Fetch resume_upload activities (fetching 50 to filter down to valid ones)
-    resume_logs = db.query(UserActivity).filter(UserActivity.activity_type == "resume_upload").order_by(UserActivity.timestamp.desc()).limit(50).all()
+    # Fetch resume_upload activities
+    resume_logs = db.query(UserActivity).filter(UserActivity.activity_type == "resume_upload").order_by(UserActivity.timestamp.desc()).limit(20).all()
     
     resume_details = []
     for log in resume_logs:
+        # details format: "File: abc.pdf" or "File: abc.pdf (Saved: 2023..._abc.pdf)"
         import re
         filename = "Unknown"
         saved_path = None
@@ -760,26 +726,28 @@ def get_analytics(db: Session = Depends(get_db)):
         if match:
              filename = match.group(1)
              saved_path = match.group(2)
+        else:
+             # Old format fallback
+             if log.details and "File: " in log.details:
+                 filename = log.details.replace("File: ", "").strip()
         
-        # ONLY show if file was actually saved
-        if saved_path:
-            # Fetch email if user_id exists
-            user_email = None
-            if log.user_id:
-                u = db.query(User).filter(User.id == log.user_id).first()
-                if u:
-                    user_email = u.email
-            
-            resume_details.append({
-                "user_name": log.user_name,
-                "user_email": user_email,
-                "filename": filename,
-                "saved_path": saved_path,
-                "date": log.timestamp.isoformat() + "Z"
-            })
-            
-    # Limit to top 20 valid ones
-    resume_details = resume_details[:20]
+        # Extract Email from details if present
+        user_email = "No Email"
+        email_match = re.search(r"\[Email: (.*?)\]", log.details or "")
+        if email_match:
+             user_email = email_match.group(1)
+        # Fallback: Try to query user table if user_id exists
+        elif log.user_id:
+             u = db.query(User).filter(User.id == log.user_id).first()
+             if u: user_email = u.email
+
+        resume_details.append({
+            "user_name": log.user_name,
+            "user_email": user_email,
+            "filename": filename,
+            "saved_path": saved_path, # If null, view not available (old files)
+            "date": log.timestamp.isoformat() + "Z"
+        })
     
     return {
         "resume_uploads": resume_uploads,
@@ -789,6 +757,13 @@ def get_analytics(db: Session = Depends(get_db)):
         "daily_stats": graph_data,
         "resume_details": resume_details
     }
+
+@app.delete("/admin/analytics")
+def reset_analytics(db: Session = Depends(get_db)):
+    # Delete all UserActivity logs
+    db.query(UserActivity).delete()
+    db.commit()
+    return {"message": "All analytics data has been reset."}
 
 # (End of Analytics Endpoint)
 # Resume original flow of file...
@@ -1246,34 +1221,6 @@ def ats_check(data: ATSRequest, db: Session = Depends(get_db)):
             
     # ----------------------------------------------
     
-    # ----------------------------------------------
-    
-    # VALIDATION: Reject Gibberish / Too Short after expansion
-    # If expansion happened, clean_jd has keywords. If not, it's just the input.
-    if len(clean_jd) < 10:
-         raise HTTPException(status_code=400, detail="Job Description is too short. Please provide more details or a valid job title.")
-
-    # Check for meaningful content if text is relatively short (prevent 'asdf asdf')
-    # If the text does not contain at least one known technical keyword and is short, reject it.
-    is_short_input = len(clean_jd) < 50
-    has_tech_keyword = False
-    
-    # Fast check against flat list
-    all_skills_flat = set()
-    for s_list in TECHNICAL_SKILLS.values():
-        for s in s_list:
-             all_skills_flat.add(s.lower())
-    
-    # We check if any word in clean_jd is in our huge skill database
-    # This ensures "Python Developer" passes (contains 'python'), but "Banana Eater" fails.
-    # Only enforce this for short inputs to allow generic long descriptions.
-    if is_short_input:
-        tokens = set(clean_jd.split())
-        if not tokens.intersection(all_skills_flat) and "developer" not in clean_jd and "engineer" not in clean_jd:
-             # Relaxed check: allow if it has standard job terms
-             if not any(x in clean_jd for x in ["manager", "analyst", "designer", "consultant", "intern"]):
-                 raise HTTPException(status_code=400, detail="Please enter a valid technical Job Role (e.g., 'Python Developer') or a full Job Description.")
-
     if not clean_jd or not clean_resume:
          return {"score": 0, "matched_keywords": [], "missing_keywords": ["Content empty or unreadable"]}
     
@@ -1469,9 +1416,8 @@ frontend_dist = "../frontend/dist"
 def health_check():
     return {"status": "ok", "timestamp": datetime.utcnow()}
 
-if not os.path.exists("./uploads"):
-    os.makedirs("./uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="./uploads"), name="uploads")
+if os.path.exists("./uploads"):
+    app.mount("/uploads", StaticFiles(directory="./uploads"), name="uploads")
 
 if os.path.exists(frontend_dist):
     app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="static")
