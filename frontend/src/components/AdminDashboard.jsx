@@ -112,14 +112,15 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
     };
 
     const handleResetAnalytics = async () => {
-        if (window.confirm("WARNING: This will delete ALL Analytics data (uploads, interviews, scans). This cannot be undone.")) {
+        if (window.confirm("⚠️ Are you sure you want to RESET external analytics? \n\nThis will clear all:\n- Resume Upload Histories\n- ATS Scan Records\n- Interview Logs\n\nThis action cannot be undone.")) {
             try {
                 await axios.delete('/admin/analytics');
-                alert("Analytics data reset successfully.");
+                setAnalytics({ ...analytics, resume_details: [], daily_stats: [] });
+                alert("✅ Analytics Data has been successfully reset.");
                 fetchData(); // Refresh
             } catch (e) {
                 console.error(e);
-                alert("Failed to reset data.");
+                alert("❌ Failed to reset data. Please try again.");
             }
         }
     };
