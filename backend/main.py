@@ -91,6 +91,36 @@ def verify_password(plain_password, hashed_password):
     hashed_password_bytes = hashed_password.encode('utf-8')
     return bcrypt.checkpw(password_byte_enc, hashed_password_bytes)
 
+# --- VISIT LOGGING ---
+class VisitLog(BaseModel):
+    user_id: Optional[int] = None
+    user_name: str
+
+@app.post("/log-visit")
+def log_visit(data: VisitLog, db: Session = Depends(get_db)):
+    # Log a site visit
+    try:
+        # Debounce visits (1 per minute per user) so we don't spam on refresh
+        cutoff = datetime.utcnow() - timedelta(minutes=1)
+        existing = db.query(UserActivity).filter(
+            UserActivity.activity_type == "visit",
+            UserActivity.user_name == data.user_name,
+            UserActivity.timestamp >= cutoff
+        ).first()
+        
+        if not existing:
+             act = UserActivity(
+                user_id=data.user_id,
+                user_name=data.user_name,
+                activity_type="visit", 
+                details="Site Open / Home Page"
+             )
+             db.add(act)
+             db.commit()
+    except Exception as e:
+         print(f"Log visit failed: {e}")
+    return {"status": "logged"}
+
 # --- ADMIN API ENDPOINTS (NEW) ---
 
 @app.get("/admin/stats")
@@ -320,7 +350,11 @@ async def scan_resume(
              # DEBOUNCE: Check if same user uploaded same file in last 15 seconds
              cutoff = datetime.utcnow() - timedelta(seconds=15)
              
-             activity_type = "ats_resume_upload" if source == "ats_checker" else "resume_upload"
+             activity_type = "resume_upload" # Default
+             if source == "ats_checker":
+                 activity_type = "ats_resume_upload"
+             elif source == "interview_prep":
+                 activity_type = "interview_prep_upload"
              
              existing = db.query(UserActivity).filter(
                  UserActivity.activity_type == activity_type,
@@ -799,9 +833,9 @@ def get_analytics(db: Session = Depends(get_db)):
     
     # --- RESUME FILES TABLE (Fixed for Multiple Files) ---
     # Fetch larger set to ensuring we capture multiple uploads
-    # Include both 'resume_upload' (Job Search) and 'ats_resume_upload' (ATS)
+    # Include: resume_upload (Job), ats_resume_upload (ATS), interview_prep_upload (Prep)
     resume_logs = db.query(UserActivity).filter(
-        UserActivity.activity_type.in_(["resume_upload", "ats_resume_upload"])
+        UserActivity.activity_type.in_(["resume_upload", "ats_resume_upload", "interview_prep_upload"])
     ).order_by(UserActivity.timestamp.desc()).limit(100).all()
     
     resume_details = []

@@ -515,6 +515,18 @@ const ContactSection = ({ user, setPage }) => {
 };
 
 const Home = ({ setPage, user }) => {
+    // Log Visit
+    React.useEffect(() => {
+        const logVisit = async () => {
+             try {
+                 // Simple fire and forget
+                 const userData = user ? { user_id: user.id, user_name: user.full_name } : { user_name: "Guest" };
+                 await axios.post('/log-visit', userData);
+             } catch(e) { console.error("Visit log failed", e); }
+        };
+        logVisit();
+    }, []); // Run once on mount
+
     return (
         <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden selection:bg-purple-500/30">
             <HeroSection setPage={setPage} />
