@@ -899,10 +899,11 @@ def get_analytics(db: Session = Depends(get_db)):
 
 @app.delete("/admin/analytics")
 def reset_analytics(db: Session = Depends(get_db)):
-    # Delete all UserActivity logs
-    db.query(UserActivity).delete()
+    # Delete all UserActivity logs EXCEPT 'visit' type (Graph Data)
+    # This ensures Reset Data only clears Resume Uploads, ATS Scans, Interviews, etc. but KEEPS the daily visitor graph.
+    db.query(UserActivity).filter(UserActivity.activity_type != "visit").delete()
     db.commit()
-    return {"message": "All analytics data has been reset."}
+    return {"message": "Analytics data reset (Graph history preserved)."}
 
 # (End of Analytics Endpoint)
 # Resume original flow of file...
