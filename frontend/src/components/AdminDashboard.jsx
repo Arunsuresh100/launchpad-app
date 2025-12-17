@@ -744,7 +744,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                     <tbody className="divide-y divide-slate-800/50">
                                         {analytics.resume_details && analytics.resume_details.filter(f => f.filename !== 'Unknown').length > 0 ? (
                                             Object.entries(analytics.resume_details
-                                                .filter(file => file.filename !== 'Unknown' && file.user_name !== 'Candidate') // Filter Ghost Data
+                                                .filter(file => file.filename !== 'Unknown') // Only filter bad filenames, allowing 'Candidate' to show
                                                 .reduce((acc, curr) => {
                                                     const key = `${curr.user_name}|${curr.user_email || ''}`;
                                                     (acc[key] = acc[key] || []).push(curr);
