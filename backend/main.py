@@ -316,20 +316,32 @@ async def scan_resume(
         # LOG ACTIVITY (Only if not skipped)
         if not skip_logging:
             try:
-                 # Tag as 'resume_upload'
-                 details_str = f"File: {file.filename} (Saved: {saved_filename})" if saved_filename else f"File: {file.filename}"
-                 if user_email:
-                     details_str += f" [Email: {user_email}]"
-                 
-                 act = UserActivity(
-                    user_id=user_id,
-                    user_name=user_name or "Candidate",
-                    activity_type="resume_upload", 
-                    details=details_str
-                 )
-                 db.add(act)
-                 db.commit()
-            except:
+                 # DEBOUNCE: Check if same user uploaded same file in last 2 minutes
+                 # This prevents double counting if frontend sends duplicate requests or user clicks twice
+                 cutoff = datetime.utcnow() - timedelta(minutes=2)
+                 existing = db.query(UserActivity).filter(
+                     UserActivity.activity_type == "resume_upload",
+                     UserActivity.timestamp >= cutoff,
+                     UserActivity.user_name == (user_name or "Candidate"),
+                     UserActivity.details.contains(file.filename)
+                 ).first()
+
+                 if not existing:
+                     # Tag as 'resume_upload'
+                     details_str = f"File: {file.filename} (Saved: {saved_filename})" if saved_filename else f"File: {file.filename}"
+                     if user_email:
+                         details_str += f" [Email: {user_email}]"
+                     
+                     act = UserActivity(
+                        user_id=user_id,
+                        user_name=user_name or "Candidate",
+                        activity_type="resume_upload", 
+                        details=details_str
+                     )
+                     db.add(act)
+                     db.commit()
+            except Exception as e:
+                 print(f"Logging Error: {e}")
                  pass
 
         return {
@@ -341,6 +353,13 @@ async def scan_resume(
         raise HTTPException(status_code=500, detail=str(e))
     
 # --- AUTHENTICATION ---
+# ...
+
+# (Skipping to get_analytics changes...)
+# Note: I need to use multiple ReplaceBlocks if they are far apart, but tool only supports contiguous. 
+# I will use separate calls or just replace the Resume List block in a second call.
+# Actually, I can't jump lines in ReplacementContent. 
+# So I will do scan_resume first.
 # ... (Leaving lines 343+ as is, but focusing on the chunk to replace)
 
 # I will replace the function body up to the end of scan_resume and jump to get_analytics to fix the graph query.
@@ -723,10 +742,12 @@ def get_analytics(db: Session = Depends(get_db)):
     graph_data = [{"date": k, "users": v} for k, v in daily_counts.items()]
     
     # --- RESUME FILES TABLE ---
-    # Fetch resume_upload activities
-    resume_logs = db.query(UserActivity).filter(UserActivity.activity_type == "resume_upload").order_by(UserActivity.timestamp.desc()).limit(20).all()
+    # Fetch larger set of resume_upload activities to deduplicate
+    resume_logs = db.query(UserActivity).filter(UserActivity.activity_type == "resume_upload").order_by(UserActivity.timestamp.desc()).limit(100).all()
     
     resume_details = []
+    seen_uploads = set() # (user_email, filename)
+
     for log in resume_logs:
         # details format: "File: abc.pdf" or "File: abc.pdf (Saved: 2023..._abc.pdf)"
         import re
@@ -752,6 +773,13 @@ def get_analytics(db: Session = Depends(get_db)):
              u = db.query(User).filter(User.id == log.user_id).first()
              if u: user_email = u.email
 
+        # DEDUPLICATION CHECK
+        unique_key = (user_email, filename)
+        if unique_key in seen_uploads:
+            continue
+        
+        seen_uploads.add(unique_key)
+
         resume_details.append({
             "user_name": log.user_name,
             "user_email": user_email,
@@ -759,6 +787,9 @@ def get_analytics(db: Session = Depends(get_db)):
             "saved_path": saved_path, # If null, view not available (old files)
             "date": log.timestamp.isoformat() + "Z"
         })
+
+        if len(resume_details) >= 20: 
+            break
     
     return {
         "resume_uploads": resume_uploads,
