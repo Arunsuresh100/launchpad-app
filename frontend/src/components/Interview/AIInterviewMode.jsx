@@ -220,8 +220,25 @@ const AIInterviewMode = ({ onBack }) => {
         setFinalFeedback(null); // Clear previous
 
         try {
+            // Get user info for logging
+            let userInfo = {};
+            try {
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                    const u = JSON.parse(storedUser);
+                    userInfo = {
+                        user_id: u.id,
+                        user_name: u.full_name,
+                        user_email: u.email
+                    };
+                }
+            } catch(e) { console.error("Error parsing user info", e); }
+
             // Call Backend Logic
-            const res = await axios.post('/interview/evaluate', { transcript: finalTranscript });
+            const res = await axios.post('/interview/evaluate', { 
+                transcript: finalTranscript,
+                ...userInfo
+            });
             setFinalFeedback(res.data);
         } catch (err) {
             console.error(err);

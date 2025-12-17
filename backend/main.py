@@ -449,6 +449,23 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         # Log Event
         log_event(db, "INFO", f"User logged in: {db_user.email} ({db_user.role})")
         
+        # LOG ACTIVITY for Graph (Daily Active Users)
+        try:
+             # Check if we already logged a login for this user today to avoid spamming (optional, but good practice)
+             # Actually, for simple "hits" or "users who opened site", we can log every login or just rely on distinct count in analytics.
+             # User asked for "count of each day how many user open the site".
+             # So logging every login is safe, analytics will count DISTINCT users.
+             act = UserActivity(
+                user_id=db_user.id,
+                user_name=db_user.full_name,
+                activity_type="login", 
+                details=f"Login via {db_user.provider}"
+             )
+             db.add(act)
+             db.commit()
+        except:
+             pass
+        
         return {
             "id": db_user.id, 
             "email": db_user.email, 
@@ -506,9 +523,12 @@ def get_admin_stats(db: Session = Depends(get_db)):
 
 class InterviewEval(BaseModel):
     transcript: List[dict] # [{question: str, answer: str}]
+    user_id: Optional[int] = None
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
 
 @app.post("/interview/evaluate")
-def evaluate_interview(data: InterviewEval):
+def evaluate_interview(data: InterviewEval, db: Session = Depends(get_db)):
     transcript = data.transcript
     if not transcript:
         return {"score": 0, "pros": ["None"], "cons": ["No answers recorded."]}
@@ -529,6 +549,7 @@ def evaluate_interview(data: InterviewEval):
 
     valid_answers = 0
     skipped_count = 0
+    extracted_skills = set() # Track found skills for feedback
     
     for entry in transcript:
         ans = entry.get('answer', '').strip()
@@ -551,6 +572,7 @@ def evaluate_interview(data: InterviewEval):
             if skill in ans_lower:
                 keyword_score += 1
                 tech_found = True
+                extracted_skills.add(skill)
         
         # HR/Communication Scoring
         for hr in hr_keywords:
@@ -584,6 +606,32 @@ def evaluate_interview(data: InterviewEval):
     
     # Minimum encouragement ONLY if attended reasonably well
     if final_score < 2 and valid_answers > (len(transcript) / 2): final_score = 2
+
+    # LOG INTERVIEW ATTEMPT (Card 3 Fix)
+    try:
+        # We need DB access here. Added dependency to function signature.
+        if db:
+            user_name = data.user_name or "Candidate"
+            email_info = f" [Email: {data.user_email}]" if data.user_email else ""
+            
+            act = UserActivity(
+                user_id=data.user_id,
+                user_name=user_name,
+                activity_type="interview_attempt",
+                details=f"Score: {final_score}/10 ({valid_answers} ans){email_info}"
+            )
+            db.add(act)
+            db.commit()
+    except Exception as e:
+        print(f"Failed to log interview: {e}")
+
+    return {
+        "score": final_score,
+        "pros": ["Good effort on " + ", ".join(list(extracted_skills)[:3])] if extracted_skills else ["Completed the session"],
+        "cons": ["Try to elaborate more" if word_count_score < 5 else "Good depth"],
+        # Return mock analysis if real one is too simple
+        "matched_keywords": list(extracted_skills)
+    }
 
 
 
@@ -703,7 +751,9 @@ class AnalyticsResponse(BaseModel):
 @app.get("/admin/analytics", response_model=AnalyticsResponse)
 def get_analytics(db: Session = Depends(get_db)):
     # Counts
+    # CARD 1 FIX: Count total uploads directly from DB
     resume_uploads = db.query(UserActivity).filter(UserActivity.activity_type == "resume_upload").count()
+    
     ats_checks = db.query(UserActivity).filter(UserActivity.activity_type == "ats_check").count()
     interviews = db.query(UserActivity).filter(UserActivity.activity_type == "interview_attempt").count()
     
@@ -717,9 +767,7 @@ def get_analytics(db: Session = Depends(get_db)):
         "timestamp": a.timestamp.isoformat() + "Z"
     } for a in recent]
     
-    # --- GRAPH DATA: Daily Activity Users ---
-    # Aggregate logins or unique active users from User table?
-    # Better: Aggregate UserActivity by date
+    # --- GRAPH DATA: Daily Unique Users (Fixed) ---
     from sqlalchemy import func
     
     # Get last 7 days keys
@@ -729,9 +777,11 @@ def get_analytics(db: Session = Depends(get_db)):
         d = today - timedelta(days=i)
         daily_counts[d.isoformat()] = 0
         
+    # Count DISTINCT users per day (ignoring multiple actions by same user)
+    # This answers "how many user open the site" (assuming they do some activity like login)
     stats_query = db.query(
         func.date(UserActivity.timestamp).label('date'), 
-        func.count(UserActivity.id)
+        func.count(func.distinct(UserActivity.user_name)) # Using Name as proxy for ID if ID missing, or we can use ID
     ).group_by(func.date(UserActivity.timestamp)).all()
     
     for date_obj, count in stats_query:
@@ -741,12 +791,12 @@ def get_analytics(db: Session = Depends(get_db)):
             
     graph_data = [{"date": k, "users": v} for k, v in daily_counts.items()]
     
-    # --- RESUME FILES TABLE ---
-    # Fetch larger set of resume_upload activities to deduplicate
+    # --- RESUME FILES TABLE (Fixed for Multiple Files) ---
+    # Fetch larger set to ensuring we capture multiple uploads
     resume_logs = db.query(UserActivity).filter(UserActivity.activity_type == "resume_upload").order_by(UserActivity.timestamp.desc()).limit(100).all()
     
     resume_details = []
-    seen_uploads = set() # (user_email, filename)
+    seen_uploads = set() 
 
     for log in resume_logs:
         # details format: "File: abc.pdf" or "File: abc.pdf (Saved: 2023..._abc.pdf)"
@@ -768,13 +818,17 @@ def get_analytics(db: Session = Depends(get_db)):
         email_match = re.search(r"\[Email: (.*?)\]", log.details or "")
         if email_match:
              user_email = email_match.group(1)
-        # Fallback: Try to query user table if user_id exists
         elif log.user_id:
              u = db.query(User).filter(User.id == log.user_id).first()
              if u: user_email = u.email
 
-        # DEDUPLICATION CHECK
-        unique_key = (user_email, filename)
+        # TABLE FIX: Deduplicate only if EXACT same file upload (same path or same user+filename+time approx? Path is best unique ID)
+        # If saved_path exists, it's unique per upload instance (since we use timestamp in filename).
+        # So we just rely on the log ID or saved_path.
+        # We will use (saved_path) as key if exists, else fallback to (user, filename, date)
+        
+        unique_key = saved_path if saved_path else f"{user_email}_{filename}_{log.timestamp}"
+        
         if unique_key in seen_uploads:
             continue
         
@@ -784,23 +838,15 @@ def get_analytics(db: Session = Depends(get_db)):
             "user_name": log.user_name,
             "user_email": user_email,
             "filename": filename,
-            "saved_path": saved_path, # If null, view not available (old files)
+            "saved_path": saved_path, 
             "date": log.timestamp.isoformat() + "Z"
         })
-
-        if len(resume_details) >= 20: 
-            break
     
-    
-    # Calculate Counts based on UNIQUE uploads (matching the user request)
-    # This ensures the Card 1 count matches the visual list logic
-    resume_uploads_count = len(resume_details)
-    
-    # Slice for the table view (only show top 20 latest unique)
-    resume_details_view = resume_details[:20]
+    # Slice for view
+    resume_details_view = resume_details[:50] # increased limit
     
     return {
-        "resume_uploads": resume_uploads_count,
+        "resume_uploads": resume_uploads, # Fixed variable name
         "ats_checks": ats_checks,
         "interviews_attended": interviews,
         "recent_activities": [],
@@ -1356,11 +1402,11 @@ def ats_check(data: ATSRequest, db: Session = Depends(get_db)):
     }
     
 
-class InterviewEval(BaseModel):
-    transcript: List[dict] # [{question: str, answer: str}]
+# class InterviewEval(BaseModel):
+#     transcript: List[dict] # [{question: str, answer: str}]
 
-@app.post("/interview/evaluate")
-def evaluate_interview(data: InterviewEval, db: Session = Depends(get_db)):
+# @app.post("/interview/evaluate")
+def evaluate_interview_deprecated(data: dict, db: Session = Depends(get_db)):
     transcript = data.transcript
     if not transcript:
         return {"score": 0, "pros": ["None"], "cons": ["No answers recorded."]}
