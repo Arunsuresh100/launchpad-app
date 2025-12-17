@@ -3,6 +3,40 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Force Frontend Build Update V3 - Final UI Polish
+
+// --- Custom Confirmation Modal ---
+const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-md w-full shadow-2xl transform scale-100 transition-all">
+                <div className="flex items-center gap-3 mb-4 text-amber-500">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    <h3 className="text-xl font-bold text-white">{title}</h3>
+                </div>
+                <p className="text-slate-300 mb-6 leading-relaxed">
+                    {message}
+                </p>
+                <div className="flex justify-end gap-3">
+                    <button 
+                        onClick={onClose}
+                        className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors font-medium border border-transparent hover:border-slate-700"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        onClick={onConfirm}
+                        className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-xl font-bold shadow-lg shadow-red-900/20 transition-all transform hover:scale-105"
+                    >
+                        Reset Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+// ---------------------------------
+
 const AdminDashboard = ({ user, setPage, setUser }) => {
     const [stats, setStats] = useState({ total_users: 0, active_users: 0, total_resumes: 0 });
     const [users, setUsers] = useState([]);
@@ -12,6 +46,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
     const [notification, setNotification] = useState('');
+    const [showResetModal, setShowResetModal] = useState(false); // NEW MODAL STATE
     
     // Job Form State
     const [showJobForm, setShowJobForm] = useState(false);
@@ -111,17 +146,17 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
         }
     };
 
-    const handleResetAnalytics = async () => {
-        if (window.confirm("⚠️ Are you sure you want to RESET external analytics? \n\nThis will clear all:\n- Resume Upload Histories\n- ATS Scan Records\n- Interview Logs\n\nThis action cannot be undone.")) {
-            try {
-                await axios.delete('/admin/analytics');
-                setAnalytics({ ...analytics, resume_details: [], daily_stats: [] });
-                alert("✅ Analytics Data has been successfully reset.");
-                fetchData(); // Refresh
-            } catch (e) {
-                console.error(e);
-                alert("❌ Failed to reset data. Please try again.");
-            }
+    const performResetAnalytics = async () => {
+        try {
+            await axios.delete('/admin/analytics');
+            setAnalytics({ ...analytics, resume_details: [], daily_stats: [] });
+            setNotification("Analytics Data has been successfully reset.");
+            setTimeout(() => setNotification(''), 3000);
+            fetchData(); // Refresh
+        } catch (e) {
+            console.error(e);
+            setNotification("Failed to reset data. Please try again.");
+            setTimeout(() => setNotification(''), 3000);
         }
     };
     
@@ -581,20 +616,20 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                         
                         {/* 3 CIRCLES ROW */}
                         {/* 3 ANALYTICS CARDS ROW */}
-                        {/* 3 ANALYTICS CARDS ROW */}
+{/* 3 ANALYTICS CARDS ROW */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {/* Card 1: Resume Uploads */}
+                            {/* Card 1: Resume Job Searches */}
                             <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-blue-500/50 transition-all shadow-xl hover:shadow-blue-900/20">
                                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                                     <svg className="w-32 h-32 text-blue-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm0-8h-2V7h2v2z" /></svg>
                                 </div>
                                 <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 mb-4 group-hover:scale-110 transition-transform">
-                                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
                                 </div>
                                 <div>
-                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Total Uploads</h3>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Resume Job Searches</h3>
                                     <p className="text-4xl font-extrabold text-white tracking-tight">{analytics.resume_uploads}</p>
-                                    <p className="text-xs text-slate-500 mt-2 font-medium">Resumes processed</p>
+                                    <p className="text-xs text-slate-500 mt-2 font-medium">Candidates Analyzed</p>
                                 </div>
                             </div>
 
@@ -604,12 +639,12 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                     <svg className="w-32 h-32 text-purple-500" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" /></svg>
                                 </div>
                                 <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 mb-4 group-hover:scale-110 transition-transform">
-                                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                                 </div>
                                 <div>
-                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">ATS Scans</h3>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">ATS Optimizations</h3>
                                     <p className="text-4xl font-extrabold text-white tracking-tight">{analytics.ats_checks}</p>
-                                    <p className="text-xs text-slate-500 mt-2 font-medium">Optimizations run</p>
+                                    <p className="text-xs text-slate-500 mt-2 font-medium">Scores Generated</p>
                                 </div>
                             </div>
 
@@ -619,19 +654,19 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                     <svg className="w-32 h-32 text-emerald-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" /></svg>
                                 </div>
                                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-4 group-hover:scale-110 transition-transform">
-                                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                                 </div>
                                 <div>
                                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Interviews</h3>
                                     <p className="text-4xl font-extrabold text-white tracking-tight">{analytics.interviews_attended}</p>
-                                    <p className="text-xs text-slate-500 mt-2 font-medium">Sessions completed</p>
+                                    <p className="text-xs text-slate-500 mt-2 font-medium">Training Sessions</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* DAILY ACTIVITY GRAPH */}
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-6">
-                            <h3 className="text-lg font-bold text-white mb-6">User Activity Trends</h3>
+                            <h3 className="text-lg font-bold text-white mb-6">User Activity Trends (Last 7 Days)</h3>
                             <div className="h-64 flex items-end justify-between gap-2 px-4 pb-4 border-b border-l border-slate-700/50 relative">
                                 {analytics.daily_stats && analytics.daily_stats.length > 0 ? (
                                     <>
@@ -641,33 +676,33 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                         </div>
                                         
                                         {analytics.daily_stats.map((stat, i) => {
-                                            const maxUsers = Math.max(...analytics.daily_stats.map(s => s.users), 10);
+                                            const maxUsers = Math.max(...analytics.daily_stats.map(s => s.users), 5);
                                             const heightPerc = (stat.users / maxUsers) * 100;
                                             return (
                                                 <div key={i} className="flex flex-col items-center gap-2 group w-full">
                                                     <div className="relative w-full flex justify-center h-full items-end">
                                                         <div 
-                                                            className="w-full max-w-[40px] bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t-lg transition-all duration-1000 ease-out hover:opacity-80 relative shadow-[0_0_15px_rgba(37,99,235,0.3)]"
+                                                            className="w-full max-w-[40px] bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t-lg transition-all duration-1000 ease-out hover:opacity-100 opacity-90 relative shadow-[0_0_15px_rgba(37,99,235,0.4)]"
                                                             style={{ height: `${Math.max(heightPerc, 2)}%` }}
                                                         >
-                                                            <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs py-1.5 px-3 rounded-lg border border-slate-700 shadow-xl opacity-0 group-hover:opacity-100 transition-all font-bold z-10">
-                                                                {stat.users}
+                                                            <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs py-1.5 px-3 rounded-lg border border-slate-700 shadow-xl opacity-0 group-hover:opacity-100 transition-all font-bold z-10 whitespace-nowrap">
+                                                                {stat.users} Users
                                                                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45 border-r border-b border-slate-700"></div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <span className="text-[10px] text-slate-500 font-mono rotate-0 whitespace-nowrap">{new Date(stat.date).toLocaleDateString(undefined, {weekday:'short'})}</span>
+                                                    <span className="text-[10px] text-slate-500 font-mono text-center leading-tight">{new Date(stat.date).toLocaleDateString(undefined, {weekday:'short'})}<br/><span className="opacity-50">{new Date(stat.date).getDate()}</span></span>
                                                 </div>
                                             )
                                         })}
                                     </>
                                 ) : (
-                                    <p className="w-full text-center text-slate-500 self-center">No daily data available</p>
+                                    <p className="w-full text-center text-slate-500 self-center">No daily data available yet.</p>
                                 )}
                             </div>
                         </div>
                         
-                        {/* RESUME UPLOADS TABLE (FLAT LAYOUT) */}
+                        {/* RESUME UPLOADS TABLE (GROUPED BY USER) */}
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                             <div className="p-4 md:p-6 border-b border-slate-800 bg-slate-800/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -675,7 +710,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                     Resume Log
                                 </h3>
                                 <div className="flex gap-3">
-                                    <button onClick={handleResetAnalytics} className="text-xs text-red-400 hover:text-red-300 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20 transition-all hover:bg-red-500/20 font-medium">Reset Data</button>
+                                    <button onClick={() => setShowResetModal(true)} className="text-xs text-red-500 hover:text-red-300 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20 transition-all hover:bg-red-500/20 font-medium animate-pulse">Reset Data</button>
                                     <button onClick={fetchData} className="text-xs text-blue-400 hover:text-white px-3 py-1.5 rounded-lg border border-blue-500/20 hover:bg-blue-600 transition-all font-medium">Refresh</button>
                                 </div>
                             </div>
@@ -690,47 +725,93 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-800/50">
-                                        {analytics.resume_details && analytics.resume_details.length > 0 ? (
-                                            analytics.resume_details.map((file, idx) => (
-                                                <tr key={idx} className="hover:bg-slate-800/30 transition-colors group">
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex flex-col">
-                                                            <span className="font-bold text-slate-200">{file.user_name}</span>
-                                                            <span className="text-xs text-blue-400">{file.user_email || "No Email"}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-2 text-slate-300">
-                                                            <svg className="w-4 h-4 text-red-400 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                                                            <span className="truncate max-w-[200px]" title={file.filename}>{file.filename}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-xs font-mono text-slate-500">
-                                                        {formatDate(file.date)}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right">
-                                                         {file.saved_path ? (
-                                                            <a 
-                                                                href={`/uploads/${file.saved_path}`} 
-                                                                target="_blank" 
-                                                                rel="noopener noreferrer"
-                                                                className="px-3 py-1.5 bg-slate-800 hover:bg-blue-600 text-blue-400 hover:text-white rounded-md text-xs font-bold transition-all border border-slate-700 hover:border-blue-500 inline-flex items-center gap-1 shadow-sm"
-                                                            >
-                                                                View
-                                                            </a>
-                                                        ) : <span className="text-slate-600 text-xs italic">Expired</span>}
-                                                    </td>
-                                                </tr>
-                                            ))
+                                        {analytics.resume_details && analytics.resume_details.filter(f => f.filename !== 'Unknown').length > 0 ? (
+                                            Object.entries(analytics.resume_details
+                                                .filter(file => file.filename !== 'Unknown' && file.user_name !== 'Candidate') // Filter Ghost Data
+                                                .reduce((acc, curr) => {
+                                                    const key = `${curr.user_name}|${curr.user_email || ''}`;
+                                                    (acc[key] = acc[key] || []).push(curr);
+                                                    return acc;
+                                                }, {})
+                                            ).map(([userKey, files], idx) => {
+                                                const [userName, userEmail] = userKey.split('|');
+                                                return (
+                                                    <React.Fragment key={idx}>
+                                                        {/* User Group Header */}
+                                                        <tr className="bg-slate-800/40 border-b border-slate-800/50">
+                                                            <td colSpan="4" className="px-6 py-3">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-lg">
+                                                                        {userName.charAt(0).toUpperCase()}
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className="font-bold text-slate-200 text-sm">{userName}</span>
+                                                                        {userEmail && <span className="text-xs text-blue-400">{userEmail}</span>}
+                                                                    </div>
+                                                                    <span className="ml-auto text-xs bg-slate-700/50 text-slate-400 px-2 py-0.5 rounded-full border border-slate-600">{files.length} Files</span>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        {/* File Rows */}
+                                                        {files.map((file, fIdx) => (
+                                                            <tr key={fIdx} className="hover:bg-slate-800/20 transition-colors group">
+                                                                <td className="px-6 py-3 pl-16 w-1/4">
+                                                                    {/* Empty first col for indentation effect */}
+                                                                </td>
+                                                                <td className="px-6 py-3">
+                                                                    <div className="flex items-center gap-2 text-slate-300">
+                                                                        <svg className="w-4 h-4 text-red-500 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                                                        <span className="truncate max-w-[200px] font-medium" title={file.filename}>{file.filename}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-6 py-3 text-xs font-mono text-slate-500">
+                                                                    {formatDate(file.date)}
+                                                                </td>
+                                                                <td className="px-6 py-3 text-right">
+                                                                     {file.saved_path ? (
+                                                                        <a 
+                                                                            href={`/uploads/${file.saved_path}`} 
+                                                                            target="_blank" 
+                                                                            rel="noopener noreferrer"
+                                                                            className="px-3 py-1.5 bg-slate-800 hover:bg-blue-600 text-blue-400 hover:text-white rounded-md text-xs font-bold transition-all border border-slate-700 hover:border-blue-500 inline-flex items-center gap-1 shadow-sm opacity-80 hover:opacity-100"
+                                                                        >
+                                                                            View PDF
+                                                                        </a>
+                                                                    ) : <span className="text-red-900/50 text-xs italic border border-red-900/20 px-2 py-1 rounded">Expired</span>}
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </React.Fragment>
+                                                );
+                                            })
                                         ) : (
                                             <tr>
-                                                <td colSpan="4" className="px-6 py-8 text-center text-slate-500 italic">No resume uploads found.</td>
+                                                <td colSpan="4" className="px-6 py-12 text-center">
+                                                    <div className="flex flex-col items-center justify-center opacity-30">
+                                                        <svg className="w-12 h-12 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                                        <p className="text-slate-400 text-sm italic">No resume data found</p>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         )}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
+
+                        {/* Confirmation Modal */}
+                        <ConfirmationModal 
+                            isOpen={showResetModal} 
+                            onClose={() => setShowResetModal(false)} 
+                            onConfirm={() => {
+                                performResetAnalytics();
+                                setShowResetModal(false);
+                            }}
+                            title="Reset Analytics?"
+                            message="Are you sure you want to completely erase all resume logs, activity history, and charts? This action cannot be reversed."
+                        />
+
+
                     </div>
                 )}
                 
