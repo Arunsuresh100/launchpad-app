@@ -18,6 +18,8 @@ app = FastAPI()
 
 @app.on_event("startup")
 def on_startup():
+    # Dispose of any connections created during import time (before fork)
+    engine.dispose()
     init_db()
 
 # Include Auth Router
