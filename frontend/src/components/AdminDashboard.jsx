@@ -449,7 +449,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <img src="/admin-logo.png" alt="Logo" className="w-8 h-8 rounded-lg bg-slate-800" />
-                        <h1 className="text-lg font-bold text-white tracking-tight">Admin <span className="text-blue-500">Panel</span></h1>
+                        <h1 className="text-lg font-bold text-white tracking-tight">Admin <span className="text-blue-500">Panel v1.2 (New)</span></h1>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2 px-2 py-1 bg-slate-800 rounded-full border border-slate-700">
