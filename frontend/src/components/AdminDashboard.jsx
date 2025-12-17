@@ -670,7 +670,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
 
                         {/* RESUME UPLOADS TABLE (User Details & Files) */}
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-                            <div className="p-4 md:p-6 border-b border-slate-800 bg-slate-800/30 flex justify-between items-center">
+                            <div className="p-4 md:p-6 border-b border-slate-800 bg-slate-800/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-blue-500"></span>
                                     Resume Uploads & Files
