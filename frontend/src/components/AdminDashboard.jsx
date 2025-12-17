@@ -581,63 +581,62 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                         
                         {/* 3 CIRCLES ROW */}
                         {/* 3 ANALYTICS CARDS ROW */}
+                        {/* 3 ANALYTICS CARDS ROW */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {/* Card 1: Resume Uploads */}
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-blue-500/30 transition-all shadow-lg">
-                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                    <svg className="w-24 h-24 text-blue-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm0-8h-2V7h2v2z" /></svg>
+                            <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-blue-500/50 transition-all shadow-xl hover:shadow-blue-900/20">
+                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <svg className="w-32 h-32 text-blue-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm0-8h-2V7h2v2z" /></svg>
                                 </div>
-                                <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-500 mb-4">
-                                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 mb-4 group-hover:scale-110 transition-transform">
+                                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Total Uploads</h3>
-                                    <p className="text-3xl font-bold text-white">{analytics.resume_uploads}</p>
-                                    <p className="text-xs text-slate-500 mt-2">Resumes processed for jobs</p>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Total Uploads</h3>
+                                    <p className="text-4xl font-extrabold text-white tracking-tight">{analytics.resume_uploads}</p>
+                                    <p className="text-xs text-slate-500 mt-2 font-medium">Resumes processed</p>
                                 </div>
                             </div>
 
                             {/* Card 2: ATS Scans */}
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-purple-500/30 transition-all shadow-lg">
-                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                    <svg className="w-24 h-24 text-purple-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" /></svg>
+                             <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-purple-500/50 transition-all shadow-xl hover:shadow-purple-900/20">
+                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <svg className="w-32 h-32 text-purple-500" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" /></svg>
                                 </div>
-                                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-500 mb-4">
+                                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 mb-4 group-hover:scale-110 transition-transform">
                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">ATS Scans</h3>
-                                    <p className="text-3xl font-bold text-white">{analytics.ats_checks}</p>
-                                   <p className="text-xs text-slate-500 mt-2">Smarter resume optimizations</p>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">ATS Scans</h3>
+                                    <p className="text-4xl font-extrabold text-white tracking-tight">{analytics.ats_checks}</p>
+                                    <p className="text-xs text-slate-500 mt-2 font-medium">Optimizations run</p>
                                 </div>
                             </div>
 
                             {/* Card 3: Interviews */}
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-green-500/30 transition-all shadow-lg">
-                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                    <svg className="w-24 h-24 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" /></svg>
+                            <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/50 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-emerald-500/50 transition-all shadow-xl hover:shadow-emerald-900/20">
+                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <svg className="w-32 h-32 text-emerald-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" /></svg>
                                 </div>
-                                <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center text-green-500 mb-4">
+                                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-4 group-hover:scale-110 transition-transform">
                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Interviews</h3>
-                                    <p className="text-3xl font-bold text-white">{analytics.interviews_attended}</p>
-                                     <p className="text-xs text-slate-500 mt-2">Confidence building sessions</p>
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Interviews</h3>
+                                    <p className="text-4xl font-extrabold text-white tracking-tight">{analytics.interviews_attended}</p>
+                                    <p className="text-xs text-slate-500 mt-2 font-medium">Sessions completed</p>
                                 </div>
                             </div>
                         </div>
 
-
-
                         {/* DAILY ACTIVITY GRAPH */}
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-6">
-                            <h3 className="text-lg font-bold text-white mb-6">Daily User Activity (Last 7 Days)</h3>
+                            <h3 className="text-lg font-bold text-white mb-6">User Activity Trends</h3>
                             <div className="h-64 flex items-end justify-between gap-2 px-4 pb-4 border-b border-l border-slate-700/50 relative">
                                 {analytics.daily_stats && analytics.daily_stats.length > 0 ? (
                                     <>
-                                        {/* Y-Axis Guidelines */}
-                                        <div className="absolute inset-0 pointer-events-none flex flex-col justify-between opacity-10">
+                                        {/* Background Grid */}
+                                        <div className="absolute inset-0 pointer-events-none flex flex-col justify-between opacity-5">
                                             {[...Array(5)].map((_, i) => <div key={i} className="w-full h-px bg-white"></div>)}
                                         </div>
                                         
@@ -648,11 +647,12 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                                 <div key={i} className="flex flex-col items-center gap-2 group w-full">
                                                     <div className="relative w-full flex justify-center h-full items-end">
                                                         <div 
-                                                            className="w-full max-w-[40px] bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t-lg transition-all duration-1000 ease-out hover:opacity-80 relative"
+                                                            className="w-full max-w-[40px] bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t-lg transition-all duration-1000 ease-out hover:opacity-80 relative shadow-[0_0_15px_rgba(37,99,235,0.3)]"
                                                             style={{ height: `${Math.max(heightPerc, 2)}%` }}
                                                         >
-                                                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs py-1.5 px-3 rounded-lg border border-slate-700 shadow-xl opacity-0 group-hover:opacity-100 transition-all font-bold z-10">
                                                                 {stat.users}
+                                                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45 border-r border-b border-slate-700"></div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -666,78 +666,66 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                 )}
                             </div>
                         </div>
-
-                        {/* RESUME UPLOADS TABLE (User Details & Files) */}
+                        
+                        {/* RESUME UPLOADS TABLE (FLAT LAYOUT) */}
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
                             <div className="p-4 md:p-6 border-b border-slate-800 bg-slate-800/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                    Resume Uploads & Files
+                                    Resume Log
                                 </h3>
                                 <div className="flex gap-3">
-                                    <button onClick={handleResetAnalytics} className="text-xs text-red-500 hover:text-red-400 bg-red-500/10 px-2 py-1 rounded border border-red-500/20 transition-colors">Reset Data</button>
-                                    <button onClick={fetchData} className="text-xs text-blue-400 hover:text-white transition-colors">Refresh</button>
+                                    <button onClick={handleResetAnalytics} className="text-xs text-red-400 hover:text-red-300 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20 transition-all hover:bg-red-500/20 font-medium">Reset Data</button>
+                                    <button onClick={fetchData} className="text-xs text-blue-400 hover:text-white px-3 py-1.5 rounded-lg border border-blue-500/20 hover:bg-blue-600 transition-all font-medium">Refresh</button>
                                 </div>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm text-slate-400">
-                                    <thead className="bg-slate-950 text-slate-200 uppercase text-xs font-bold tracking-wider">
+                                    <thead className="bg-slate-950 text-slate-300 uppercase text-xs font-bold tracking-wider">
                                         <tr>
-                                            <th className="px-6 py-4 w-1/4">User Name / Email</th>
-                                            <th className="px-6 py-4">Uploaded File Details</th>
+                                            <th className="px-6 py-4">User</th>
+                                            <th className="px-6 py-4">File Name</th>
+                                            <th className="px-6 py-4">Date</th>
+                                            <th className="px-6 py-4 text-right">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-800">
+                                    <tbody className="divide-y divide-slate-800/50">
                                         {analytics.resume_details && analytics.resume_details.length > 0 ? (
-                                            Object.entries(analytics.resume_details.reduce((acc, curr) => {
-                                                (acc[curr.user_name] = acc[curr.user_name] || []).push(curr);
-                                                return acc;
-                                            }, {})).map(([userName, files], grpIdx) => (
-                                                <tr key={grpIdx} className="hover:bg-slate-800/20 transition-colors">
-                                                    <td className="px-6 py-4 font-bold text-white align-top border-r border-slate-800/50 bg-slate-900/50">
-                                                        <div className="sticky top-0">
-                                                            {userName}
-                                                            {files[0].user_email && (
-                                                                <span className="block text-[11px] text-blue-400 font-normal mt-0.5 mb-1">{files[0].user_email}</span>
-                                                            )}
-                                                            <span className="block text-[10px] text-slate-500 font-normal mt-1">{files.length} Uploads</span>
+                                            analytics.resume_details.map((file, idx) => (
+                                                <tr key={idx} className="hover:bg-slate-800/30 transition-colors group">
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-slate-200">{file.user_name}</span>
+                                                            <span className="text-xs text-blue-400">{file.user_email || "No Email"}</span>
                                                         </div>
                                                     </td>
-                                                    <td className="p-0">
-                                                        <table className="w-full">
-                                                            <tbody>
-                                                                {files.map((file, fIdx) => (
-                                                                    <tr key={fIdx} className={fIdx !== files.length -1 ? "border-b border-slate-800/30" : ""}>
-                                                                        <td className="px-6 py-3 w-1/3">
-                                                                            <div className="flex items-center gap-2">
-                                                                                <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                                                                                <span className="text-slate-300 text-sm truncate max-w-[200px]" title={file.filename}>{file.filename}</span>
-                                                                            </div>
-                                                                        </td>
-                                                                        <td className="px-6 py-3 w-1/4 text-xs font-mono text-slate-500 whitespace-nowrap">
-                                                                            {formatDate(file.date)}
-                                                                        </td>
-                                                                        <td className="px-6 py-3 text-right">
-                                                                            {file.saved_path ? (
-                                                                                <a 
-                                                                                    href={`/uploads/${file.saved_path}`} 
-                                                                                    target="_blank" 
-                                                                                    rel="noopener noreferrer"
-                                                                                    className="px-3 py-1 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/50 rounded-md text-xs font-bold transition-all uppercase inline-flex items-center gap-1"
-                                                                                >
-                                                                                    View
-                                                                                </a>
-                                                                            ) : <span className="text-slate-600 text-xs italic">N/A</span>}
-                                                                        </td>
-                                                                    </tr>
-                                                                ))}
-                                                            </tbody>
-                                                        </table>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-2 text-slate-300">
+                                                            <svg className="w-4 h-4 text-red-400 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                                            <span className="truncate max-w-[200px]" title={file.filename}>{file.filename}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-xs font-mono text-slate-500">
+                                                        {formatDate(file.date)}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                         {file.saved_path ? (
+                                                            <a 
+                                                                href={`/uploads/${file.saved_path}`} 
+                                                                target="_blank" 
+                                                                rel="noopener noreferrer"
+                                                                className="px-3 py-1.5 bg-slate-800 hover:bg-blue-600 text-blue-400 hover:text-white rounded-md text-xs font-bold transition-all border border-slate-700 hover:border-blue-500 inline-flex items-center gap-1 shadow-sm"
+                                                            >
+                                                                View
+                                                            </a>
+                                                        ) : <span className="text-slate-600 text-xs italic">Expired</span>}
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
-                                            <tr><td colSpan="2" className="text-center py-8 text-slate-500">No resumes uploaded recently.</td></tr>
+                                            <tr>
+                                                <td colSpan="4" className="px-6 py-8 text-center text-slate-500 italic">No resume uploads found.</td>
+                                            </tr>
                                         )}
                                     </tbody>
                                 </table>
