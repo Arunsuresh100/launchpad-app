@@ -316,9 +316,9 @@ async def scan_resume(
         # LOG ACTIVITY (Only if not skipped)
         if not skip_logging:
             try:
-                 # DEBOUNCE: Check if same user uploaded same file in last 2 minutes
+                 # DEBOUNCE: Check if same user uploaded same file in last 15 seconds
                  # This prevents double counting if frontend sends duplicate requests or user clicks twice
-                 cutoff = datetime.utcnow() - timedelta(minutes=2)
+                 cutoff = datetime.utcnow() - timedelta(seconds=15)
                  existing = db.query(UserActivity).filter(
                      UserActivity.activity_type == "resume_upload",
                      UserActivity.timestamp >= cutoff,
@@ -791,13 +791,21 @@ def get_analytics(db: Session = Depends(get_db)):
         if len(resume_details) >= 20: 
             break
     
+    
+    # Calculate Counts based on UNIQUE uploads (matching the user request)
+    # This ensures the Card 1 count matches the visual list logic
+    resume_uploads_count = len(resume_details)
+    
+    # Slice for the table view (only show top 20 latest unique)
+    resume_details_view = resume_details[:20]
+    
     return {
-        "resume_uploads": resume_uploads,
+        "resume_uploads": resume_uploads_count,
         "ats_checks": ats_checks,
         "interviews_attended": interviews,
-        "recent_activities": activities_list,
+        "recent_activities": [],
         "daily_stats": graph_data,
-        "resume_details": resume_details
+        "resume_details": resume_details_view
     }
 
 @app.delete("/admin/analytics")
