@@ -684,8 +684,8 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                 <table className="w-full text-left text-sm text-slate-400">
                                     <thead className="bg-slate-950 text-slate-200 uppercase text-xs font-bold tracking-wider">
                                         <tr>
-                                            <th className="px-6 py-4 w-1/4">User Name</th>
-                                            <th className="px-6 py-4">Files / History</th>
+                                            <th className="px-6 py-4 w-1/4">User Name / Email</th>
+                                            <th className="px-6 py-4">Uploaded File Details</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-800">
