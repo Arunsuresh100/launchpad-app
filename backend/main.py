@@ -712,7 +712,7 @@ def get_analytics(db: Session = Depends(get_db)):
         
     stats_query = db.query(
         func.date(UserActivity.timestamp).label('date'), 
-        func.count(func.distinct(UserActivity.user_email))
+        func.count(UserActivity.id)
     ).group_by(func.date(UserActivity.timestamp)).all()
     
     for date_obj, count in stats_query:
