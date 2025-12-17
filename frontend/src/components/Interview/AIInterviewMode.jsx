@@ -87,6 +87,7 @@ const AIInterviewMode = ({ onBack }) => {
 
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('skip_logging', 'true');
 
         try {
             // First Validated Scan (checks if resume)

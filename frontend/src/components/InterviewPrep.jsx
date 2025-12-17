@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 // --- QUESTION BANKS ---
 
@@ -420,6 +421,16 @@ const InterviewPrep = () => {
     };
 
     const handleFinish = () => {
+        // Calculate and Log
+        const score = calculateScore();
+        try {
+            axios.post('/interview/log_quiz', {
+                score: score,
+                total: quizQuestions.length,
+                mode: mode || 'quiz'
+            });
+        } catch(e) { console.error(e); }
+
         setShowResult(true);
     };
 

@@ -22,6 +22,7 @@ const ATSChecker = () => {
         // Upload to extract text first
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('skip_logging', 'true');
         
         try {
             const response = await axios.post('/scan-resume', formData);

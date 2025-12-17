@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException, status
+from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException, status, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr
@@ -205,6 +205,7 @@ async def scan_resume(
     user_id: Optional[int] = Form(None),
     user_name: Optional[str] = Form(None),
     user_email: Optional[str] = Form(None),
+    skip_logging: bool = False, # FLAG TO PREVENT DOUBLE COUNTING
     db: Session = Depends(get_db)
 ):
     if not file.filename.endswith(('.pdf', '.docx')):
@@ -295,7 +296,6 @@ async def scan_resume(
                 
                 extracted_skills.add(formatted)
 
-
         
         # SAVE FILE for Admin Review
         saved_filename = None
@@ -313,24 +313,24 @@ async def scan_resume(
         except Exception as e:
             print(f"File save failed: {e}")
 
-        # LOG ACTIVITY
-
-        try:
-             # Tag as 'resume_upload'
-             details_str = f"File: {file.filename} (Saved: {saved_filename})" if saved_filename else f"File: {file.filename}"
-             if user_email:
-                 details_str += f" [Email: {user_email}]"
-             
-             act = UserActivity(
-                user_id=user_id,
-                user_name=user_name or "Candidate",
-                activity_type="resume_upload", 
-                details=details_str
-             )
-             db.add(act)
-             db.commit()
-        except:
-             pass
+        # LOG ACTIVITY (Only if not skipped)
+        if not skip_logging:
+            try:
+                 # Tag as 'resume_upload'
+                 details_str = f"File: {file.filename} (Saved: {saved_filename})" if saved_filename else f"File: {file.filename}"
+                 if user_email:
+                     details_str += f" [Email: {user_email}]"
+                 
+                 act = UserActivity(
+                    user_id=user_id,
+                    user_name=user_name or "Candidate",
+                    activity_type="resume_upload", 
+                    details=details_str
+                 )
+                 db.add(act)
+                 db.commit()
+            except:
+                 pass
 
         return {
             "filename": file.filename,
@@ -339,6 +339,13 @@ async def scan_resume(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+# --- AUTHENTICATION ---
+# ... (Leaving lines 343+ as is, but focusing on the chunk to replace)
+
+# I will replace the function body up to the end of scan_resume and jump to get_analytics to fix the graph query.
+# Since replace tool needs contiguous block, I will just replace scan_resume first.
+
 
 # --- AUTHENTICATION ---
 
@@ -705,7 +712,7 @@ def get_analytics(db: Session = Depends(get_db)):
         
     stats_query = db.query(
         func.date(UserActivity.timestamp).label('date'), 
-        func.count(UserActivity.id)
+        func.count(func.distinct(UserActivity.user_email))
     ).group_by(func.date(UserActivity.timestamp)).all()
     
     for date_obj, count in stats_query:
@@ -1405,6 +1412,23 @@ def evaluate_interview(data: InterviewEval, db: Session = Depends(get_db)):
         "pros": pros,
         "cons": cons
     }
+
+@app.post("/interview/log_quiz")
+def log_quiz_attempt(score: int = Body(...), total: int = Body(...), mode: str = Body(...), db: Session = Depends(get_db)):
+    try:
+        details = f"Quiz: {mode} (Score: {score}/{total})"
+        act = UserActivity(
+            user_id=None,
+            user_name="Candidate", 
+            activity_type="interview_attempt", # Reuse this type so it counts in "Interviews"
+            details=details
+        )
+        db.add(act)
+        db.commit()
+        return {"status": "logged"}
+    except Exception as e:
+        print(f"Quiz logging failed: {e}")
+        return {"status": "failed"}
 
 # --- SERVE STATIC FRONTEND FILES ---
 
