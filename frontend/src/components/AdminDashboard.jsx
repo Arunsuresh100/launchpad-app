@@ -686,7 +686,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                                             style={{ height: `${Math.max(heightPerc, 2)}%` }}
                                                         >
                                                             <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs py-1.5 px-3 rounded-lg border border-slate-700 shadow-xl opacity-0 group-hover:opacity-100 transition-all font-bold z-10 whitespace-nowrap">
-                                                                {stat.users} Users
+                                                                {stat.users} Activities
                                                                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45 border-r border-b border-slate-700"></div>
                                                             </div>
                                                         </div>
