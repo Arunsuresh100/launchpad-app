@@ -89,6 +89,17 @@ const AIInterviewMode = ({ onBack }) => {
         formData.append('file', file);
         formData.append('source', 'interview_prep');
 
+        // Add User Context for Admin Table
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                const u = JSON.parse(storedUser);
+                if(u.id) formData.append('user_id', u.id);
+                if(u.full_name) formData.append('user_name', u.full_name);
+                if(u.email) formData.append('user_email', u.email);
+            } catch(e) {}
+        }
+
         try {
             // First Validated Scan (checks if resume)
             const scanRes = await axios.post('/scan-resume', formData);
