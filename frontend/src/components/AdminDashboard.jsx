@@ -449,7 +449,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <img src="/admin-logo.png" alt="Logo" className="w-8 h-8 rounded-lg bg-slate-800" />
-                        <h1 className="text-lg font-bold text-white tracking-tight">Admin <span className="text-blue-500">Panel v1.3 (Final)</span></h1>
+                        <h1 className="text-lg font-bold text-white tracking-tight">Admin <span className="text-blue-500">Panel v1.4 (Mobile Optimized)</span></h1>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2 px-2 py-1 bg-slate-800 rounded-full border border-slate-700">
@@ -668,7 +668,7 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                         </div>
 
                         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-6">
-                            <h3 className="text-lg font-bold text-white mb-6">User Activity Trends (Last 7 Days)</h3>
+                            <h3 className="text-lg font-bold text-white mb-6">How many User open the site (Last 7 Days)</h3>
                             <div className="h-64 flex items-end justify-between gap-2 px-4 pb-4 border-b border-l border-slate-700/50 relative">
                                 {analytics.daily_stats && analytics.daily_stats.length > 0 ? (
                                     <div className="absolute inset-0 top-0 left-0 w-full h-full">
@@ -731,7 +731,49 @@ const AdminDashboard = ({ user, setPage, setUser }) => {
                                     <button onClick={fetchData} className="text-xs text-blue-400 hover:text-white px-3 py-1.5 rounded-lg border border-blue-500/20 hover:bg-blue-600 transition-all font-medium">Refresh</button>
                                 </div>
                             </div>
-                            <div className="overflow-x-auto">
+                            
+                            {/* MOBILE VIEW: Cards */}
+                            <div className="md:hidden p-4 space-y-4">
+                                {analytics.resume_details && analytics.resume_details.filter(f => f.filename !== 'Unknown').length > 0 ? (
+                                    analytics.resume_details
+                                        .filter(f => f.filename !== 'Unknown')
+                                        .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))
+                                        .map((file, idx) => (
+                                        <div key={idx} className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex flex-col gap-3 shadow-sm">
+                                            <div className="flex items-center gap-3">
+                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0">
+                                                    {file.user_name ? file.user_name.charAt(0).toUpperCase() : '?'}
+                                                 </div>
+                                                 <div>
+                                                     <p className="text-white font-bold text-sm">{file.user_name}</p>
+                                                     <p className="text-xs text-blue-400">{file.user_email || "No Email"}</p>
+                                                 </div>
+                                            </div>
+                                            
+                                            <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-800 flex items-center gap-3">
+                                                <svg className="w-8 h-8 text-red-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-slate-300 text-sm font-medium truncate">{file.filename}</p>
+                                                    <p className="text-slate-500 text-xs">{new Date(file.timestamp).toLocaleString()}</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex justify-end">
+                                                {file.saved_path ? (
+                                                    <a href={`/uploads/${file.saved_path}`} target="_blank" rel="noopener noreferrer" className="w-full text-center py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-blue-900/20">
+                                                        View PDF
+                                                    </a>
+                                                ) : <span className="text-red-500 text-xs italic">File Expired</span>}
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center text-slate-500 py-10 italic">No resume data found</div>
+                                )}
+                            </div>
+
+                            {/* DESKTOP VIEW: Table */}
+                            <div className="hidden md:block overflow-x-auto">
                                 <table className="w-full text-left text-sm text-slate-400">
                                     <thead className="bg-slate-950 text-slate-300 uppercase text-xs font-bold tracking-wider">
                                         <tr>
