@@ -266,11 +266,27 @@ async def scan_resume(
              )
             
         # --- VALIDATION: Check if it's actually a resume ---
-        def is_valid_resume(text_content):
-            # Normalize
+        def validate_resume_content(text_content):
             t = text_content.lower()
             
-            # Keywords that STRONGLY suggest a resume/CV
+            # 1. IMMEDIATE REJECTION: Offer Letters / Appointment Letters
+            # These are common mistakes. Reject if document clearly states it is an offer.
+            offer_keywords = [
+                "offer of employment", "appointment letter", "salary breakdown", 
+                "acceptance of offer", "joining bonus", "probation period", 
+                "employment contract", "relieving letter", "resignation acceptance"
+            ]
+            
+            # Check first 1000 chars for these titles/headers
+            intro_text = t[:1000] 
+            for bad_kw in offer_keywords:
+                if bad_kw in intro_text:
+                     raise HTTPException(
+                        status_code=400, 
+                        detail=f"Uploaded document appears to be an '{bad_kw.title()}', not a Resume. Please upload your CV/Resume."
+                     )
+
+            # 2. RESUME KEYWORD CHECK
             # We expect at least a few of these to be present.
             resume_keywords = [
                 "experience", "work history", "employment", "internship",
@@ -278,25 +294,26 @@ async def scan_resume(
                 "skills", "technologies", "technical skills", "competencies",
                 "projects", "summary", "profile", "objective",
                 "certifications", "achievements", "languages",
-                "resume", "curriculum vitae", "cv",
-                "contact", "phone", "email", "linkedin", "github"
+                "curriculum vitae", "cv", "resume"
             ]
             
-            # Count matches (simple keyword presence)
+            # Count distinct matches
             match_count = 0
+            found_keywords = set()
             for kw in resume_keywords:
                 if kw in t:
-                    match_count += 1
+                    found_keywords.add(kw)
             
-            # Threshold: A valid resume should have at least 3 of these distinct keywords.
-            # (e.g. "Education", "Experience", "Skills" is a very common trio)
-            return match_count >= 3
+            match_count = len(found_keywords)
+            
+            # Threshold: A valid resume needs at least 3 distinct sections/keywords (e.g. Education + Skills + Projects)
+            if match_count < 3:
+                 raise HTTPException(
+                     status_code=400, 
+                     detail="Document does not look like a Resume. It is missing standard sections like 'Experience', 'Education', or 'Skills'."
+                 )
 
-        if not is_valid_resume(text):
-             raise HTTPException(
-                 status_code=400, 
-                 detail="The uploaded document does not appear to be a valid Resume or CV. Please upload a professional resume file containing keywords like 'Education', 'Experience', or 'Skills'."
-             )
+        validate_resume_content(text)
 
         # Comprehensive Skill Extraction Logic
         # Flatten global skills for searching

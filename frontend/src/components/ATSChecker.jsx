@@ -40,7 +40,8 @@ const ATSChecker = () => {
              setResumeText(response.data.text_preview); 
         } catch (err) {
             console.error(err);
-            setError("Failed to parse resume. Please try another PDF.");
+            const backendMsg = err.response?.data?.detail;
+            setError(backendMsg || "Failed to parse resume. Please ensure it is a valid PDF.");
         } finally {
             setAnalyzingResume(false);
         }
