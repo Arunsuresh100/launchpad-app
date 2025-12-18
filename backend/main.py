@@ -810,10 +810,9 @@ class AnalyticsResponse(BaseModel):
 @app.get("/admin/analytics", response_model=AnalyticsResponse)
 def get_analytics(db: Session = Depends(get_db)):
     # Counts
-    # CARD 1 FIX: Count total uploads from ALL sources (Job Search, ATS, Interview)
-    resume_uploads = db.query(UserActivity).filter(
-        UserActivity.activity_type.in_(["resume_upload", "ats_resume_upload", "interview_prep_upload"])
-    ).count()
+    # CARD 1 FIX: Count ONLY Job Search uploads (Strictly 'resume_upload') as per user request.
+    # Exclude 'ats_resume_upload' and 'interview_prep_upload' from this card count.
+    resume_uploads = db.query(UserActivity).filter(UserActivity.activity_type == "resume_upload").count()
     
     ats_checks = db.query(UserActivity).filter(UserActivity.activity_type == "ats_check").count()
     interviews = db.query(UserActivity).filter(UserActivity.activity_type == "interview_attempt").count()
