@@ -100,8 +100,8 @@ class VisitLog(BaseModel):
 def log_visit(data: VisitLog, db: Session = Depends(get_db)):
     # Log a site visit
     try:
-        # Debounce visits (1 per minute per user) so we don't spam on refresh
-        cutoff = datetime.utcnow() - timedelta(minutes=1)
+        # Debounce visits (5 minutes per user) to prevent double-logging on reload/Strict Mode
+        cutoff = datetime.utcnow() - timedelta(minutes=5)
         existing = db.query(UserActivity).filter(
             UserActivity.activity_type == "visit",
             UserActivity.user_name == data.user_name,
