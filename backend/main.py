@@ -1333,6 +1333,9 @@ def search_jobs(skills: List[str], contract_type: str = "full_time", db: Session
 class ATSRequest(BaseModel):
     resume_text: str
     job_description: str
+    user_id: Optional[int] = None
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
 
 @app.post("/ats_check")
 def ats_check(data: ATSRequest, db: Session = Depends(get_db)):
@@ -1492,11 +1495,14 @@ def ats_check(data: ATSRequest, db: Session = Depends(get_db)):
     
     # LOG ACTIVITY
     try:
+        user_name = data.user_name or "Candidate"
+        email_info = f" [Email: {data.user_email}]" if data.user_email else ""
+        
         act = UserActivity(
-            user_id=None, 
-            user_name="Candidate",
+            user_id=data.user_id, 
+            user_name=user_name,
             activity_type="ats_check",
-            details=f"Score: {final_score}%"
+            details=f"Score: {final_score}%{email_info} (Job: {data.job_description[:30]}...)"
         )
         db.add(act)
         db.commit()

@@ -62,9 +62,16 @@ const ATSChecker = () => {
         setError(''); // Clear previous errors
         setLoading(true);
         try {
+            // Add user context if logged in
+            const storedUser = localStorage.getItem('user');
+            const userData = storedUser ? JSON.parse(storedUser) : {};
+
             const response = await axios.post('/ats_check', {
                 resume_text: resumeText,
-                job_description: cleanedJD
+                job_description: cleanedJD,
+                user_id: userData.id,
+                user_name: userData.full_name,
+                user_email: userData.email
             });
             setResult(response.data);
         } catch (err) {
