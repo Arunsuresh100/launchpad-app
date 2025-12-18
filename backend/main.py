@@ -1451,17 +1451,20 @@ def ats_check(data: ATSRequest, db: Session = Depends(get_db)):
     # 0.2 sim -> 70 score
     # 0.3 sim -> 85 score
     
-    if raw_similarity > 0.45:
-        base_score = 98
+    # Revised for "Miss" satisfaction - STRICT MINIMUM 50
+    # 0.05 sim -> 50 score (Base)
+    # 0.2 sim -> 85 score
+    # 0.4 sim -> 99 score
+    
+    if raw_similarity > 0.4:
+         base_score = 95
     elif raw_similarity < 0.05:
-        base_score = 25 # Even bad resumes get something for effort
+         base_score = 50 # MINIMUM SCORE IS NOW 50
     else:
-        # Boosted Formula: Score = 45 + (similarity * 160)
-        # e.g. 0.2 * 160 = 32 + 45 = 77. 
-        # e.g. 0.1 * 160 = 16 + 45 = 61.
-        base_score = 45 + (raw_similarity * 160)
-        
-    final_score = int(min(max(base_score, 10), 100))
+         # Very generous boost: Start at 55 and climb fast
+         base_score = 55 + (raw_similarity * 150)
+         
+    final_score = int(min(max(base_score, 50), 100)) # Force min 50 cap here too
     
     # EXTRACT MISSING KEYWORDS
     feature_names = vectorizer.get_feature_names_out()
