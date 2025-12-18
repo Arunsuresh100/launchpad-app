@@ -1390,25 +1390,25 @@ def ats_check(data: ATSRequest, db: Session = Depends(get_db)):
          return {"score": 0, "matched_keywords": [], "missing_keywords": ["No keywords found internally"]}
 
     
-    # Mapping Logic
+    # Mapping Logic - ADJUSTED FOR MORE GENEROUS SCORING (Market Standard)
+    # Market standard ATS: even a decent match gets 60+.
+    # Previous formula was too harsh (25 + sim*140).
     # New generous curve:
-    # 0.1 sim -> ~35-40 score
-    # 0.3 sim -> ~70-75 score
-    # 0.5 sim -> ~95-100 score
+    # 0.1 sim -> 40 score
+    # 0.2 sim -> 60 score
+    # 0.4 sim -> 90 score
     
-    if raw_similarity > 0.55:
-        base_score = 100
-    elif raw_similarity < 0.02:
-        base_score = 10
+    if raw_similarity > 0.5:
+        base_score = 98
+    elif raw_similarity < 0.05:
+        base_score = 15
     else:
-        # Linear boost: Score = 20 + similarity * 150
-        # e.g. 0.3 * 150 = 45 + 20 = 65. Still a bit low?
-        # Let's try: Score = 25 + similarity * 140
-        # 0.4 * 140 = 56 + 25 = 81. Good.
-        # 0.2 * 140 = 28 + 25 = 53.
-        base_score = 25 + (raw_similarity * 140)
+        # Boosted Formula: Score = 35 + (similarity * 150)
+        # e.g. 0.2 * 150 = 30 + 35 = 65. Correct.
+        # e.g. 0.3 * 150 = 45 + 35 = 80.
+        base_score = 35 + (raw_similarity * 150)
         
-    final_score = int(min(max(base_score, 0), 100))
+    final_score = int(min(max(base_score, 10), 100))
     
     # EXTRACT MISSING KEYWORDS
     feature_names = vectorizer.get_feature_names_out()
