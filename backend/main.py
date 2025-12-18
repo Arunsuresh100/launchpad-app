@@ -1166,7 +1166,7 @@ def change_password(data: ChangePassword, db: Session = Depends(get_db)):
 @app.post("/search_jobs")
 def search_jobs(skills: List[str], contract_type: str = "full_time", db: Session = Depends(get_db)):
     if not skills:
-        return []
+        return {"local_matches": [], "api_matches": []}
         
     from datetime import datetime, timedelta
     
