@@ -274,7 +274,9 @@ async def scan_resume(
             offer_keywords = [
                 "offer of employment", "appointment letter", "salary breakdown", 
                 "acceptance of offer", "joining bonus", "probation period", 
-                "employment contract", "relieving letter", "resignation acceptance"
+                "employment contract", "relieving letter", "resignation acceptance",
+                "letter of intent", "compensation details", "terms of employment",
+                "annexure", "ctc breakdown", "date of joining"
             ]
             
             # Check first 1000 chars for these titles/headers
@@ -836,14 +838,24 @@ def get_analytics(db: Session = Depends(get_db)):
         
     # Count DISTINCT users per day (ignoring multiple actions by same user)
     # This answers "how many user open the site" (assuming they do some activity like login)
+    # FIX: Filter ONLY 'visit' activities (users opening site) to avoid action-based increments.
+    # FIX: Exclude Admin (User Name 'Arun' or specific email) from this graph?
+    # Usually Admin is excluded from "User Traffic".
+    
     stats_query = db.query(
         func.date(UserActivity.timestamp).label('date'), 
-        func.count(func.distinct(UserActivity.user_name)) # Using Name as proxy for ID if ID missing, or we can use ID
+        func.count(func.distinct(UserActivity.user_name)) 
+    ).filter(
+        UserActivity.activity_type == "visit", # ONLY count visits, not every click/action
+        UserActivity.user_name != "Arun", # Exclude known Admin name if matches
+        UserActivity.user_name != "Admin"
     ).group_by(func.date(UserActivity.timestamp)).all()
     
     for date_obj, count in stats_query:
         d_str = str(date_obj)
         if d_str in daily_counts:
+            # If Admin logs in as "Arun" and "Arun" is excluded, count is 0. 
+            # If guest visits, count is 1.
             daily_counts[d_str] = count
             
     graph_data = [{"date": k, "users": v} for k, v in daily_counts.items()]
@@ -1153,6 +1165,9 @@ def change_password(data: ChangePassword, db: Session = Depends(get_db)):
 
 @app.post("/search_jobs")
 def search_jobs(skills: List[str], contract_type: str = "full_time", db: Session = Depends(get_db)):
+    if not skills:
+        return []
+        
     from datetime import datetime, timedelta
     
     # 1. Local Database Search
@@ -1398,15 +1413,22 @@ def ats_check(data: ATSRequest, db: Session = Depends(get_db)):
     # 0.2 sim -> 60 score
     # 0.4 sim -> 90 score
     
-    if raw_similarity > 0.5:
+    # Mapping Logic - ADJUSTED FOR MORE GENEROUS SCORING (Market Standard)
+    # Market standard ATS: even a decent match gets 60+.
+    # Revised for "Miss" satisfaction:
+    # 0.1 sim -> 50 score
+    # 0.2 sim -> 70 score
+    # 0.3 sim -> 85 score
+    
+    if raw_similarity > 0.45:
         base_score = 98
     elif raw_similarity < 0.05:
-        base_score = 15
+        base_score = 25 # Even bad resumes get something for effort
     else:
-        # Boosted Formula: Score = 35 + (similarity * 150)
-        # e.g. 0.2 * 150 = 30 + 35 = 65. Correct.
-        # e.g. 0.3 * 150 = 45 + 35 = 80.
-        base_score = 35 + (raw_similarity * 150)
+        # Boosted Formula: Score = 45 + (similarity * 160)
+        # e.g. 0.2 * 160 = 32 + 45 = 77. 
+        # e.g. 0.1 * 160 = 16 + 45 = 61.
+        base_score = 45 + (raw_similarity * 160)
         
     final_score = int(min(max(base_score, 10), 100))
     
